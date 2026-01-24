@@ -189,8 +189,8 @@ ${scaleVars}`;
             <>
               <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0" />
               <div>
-                <p className="font-medium text-warning">Accessibility Issues</p>
-                <p className="text-sm text-warning/80">
+                <p className="font-medium text-warning-foreground">Accessibility Issues</p>
+                <p className="text-sm text-warning-foreground/90">
                   {failingCount} color combination{failingCount !== 1 ? "s" : ""} fail WCAG requirements.
                   Review the A11y tab before exporting.
                 </p>
@@ -200,8 +200,8 @@ ${scaleVars}`;
             <>
               <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
               <div>
-                <p className="font-medium text-success">Ready to Export</p>
-                <p className="text-sm text-success/80">
+                <p className="font-medium text-success-foreground">Ready to Export</p>
+                <p className="text-sm text-success-foreground/90">
                   All color combinations meet WCAG AA standards.
                 </p>
               </div>

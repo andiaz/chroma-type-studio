@@ -146,15 +146,15 @@ export function AccessibilityPanel({ designSystem }: AccessibilityPanelProps) {
         <div className="grid grid-cols-3 gap-3">
           <div className="p-3 rounded-lg bg-success/10 border border-success/20 text-center">
             <p className="text-2xl font-bold text-success">{stats.passing}</p>
-            <p className="text-xs text-success/80">Passing</p>
+            <p className="text-xs text-foreground/70">Passing</p>
           </div>
           <div className="p-3 rounded-lg bg-warning/10 border border-warning/20 text-center">
-            <p className="text-2xl font-bold text-warning">{warningResults.length}</p>
-            <p className="text-xs text-warning/80">Large Only</p>
+            <p className="text-2xl font-bold text-warning-foreground">{warningResults.length}</p>
+            <p className="text-xs text-warning-foreground/90">Large Only</p>
           </div>
           <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-center">
-            <p className="text-2xl font-bold text-destructive">{stats.failing}</p>
-            <p className="text-xs text-destructive/80">Failing</p>
+            <p className="text-2xl font-bold text-foreground">{stats.failing}</p>
+            <p className="text-xs text-foreground/70">Failing</p>
           </div>
         </div>
 
