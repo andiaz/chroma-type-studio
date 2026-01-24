@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -17,8 +16,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Plus, Trash2, ChevronDown, Copy, Check } from "lucide-react";
-import { DesignSystem, ColorRole, ColorEntry } from "@/hooks/useDesignSystem";
+import { Plus, Trash2, ChevronDown, Copy, Check, Sparkles } from "lucide-react";
+import { DesignSystem, ColorRole, ColorEntry, COLOR_PRESETS } from "@/hooks/useDesignSystem";
 import { cn } from "@/lib/utils";
 
 interface PalettePanelProps {
@@ -65,6 +64,10 @@ function ColorCard({
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const handleColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onUpdate({ hex: e.target.value });
+  };
+
   return (
     <motion.div
       layout
@@ -77,10 +80,12 @@ function ColorCard({
         <PopoverTrigger asChild>
           <button className="w-full p-3 rounded-lg border border-border bg-card hover:border-primary/30 transition-all text-left">
             <div className="flex items-center gap-3">
-              <div 
-                className="w-10 h-10 rounded-lg shadow-sm border border-border flex-shrink-0"
-                style={{ backgroundColor: color.hex }}
-              />
+              <div className="relative">
+                <div 
+                  className="w-10 h-10 rounded-lg shadow-sm border border-border flex-shrink-0 cursor-pointer"
+                  style={{ backgroundColor: color.hex }}
+                />
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-sm truncate">{color.name}</span>
@@ -99,11 +104,23 @@ function ColorCard({
         
         <PopoverContent className="w-80" align="start">
           <div className="space-y-4">
-            {/* Color preview */}
-            <div 
-              className="h-20 rounded-lg border border-border"
-              style={{ backgroundColor: color.hex }}
-            />
+            {/* Color preview with native picker */}
+            <div className="relative">
+              <div 
+                className="h-20 rounded-lg border border-border cursor-pointer"
+                style={{ backgroundColor: color.hex }}
+              />
+              <input
+                type="color"
+                value={color.hex}
+                onChange={handleColorPickerChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                title="Click to pick a color"
+              />
+              <div className="absolute bottom-2 right-2 text-xs bg-black/50 text-white px-2 py-1 rounded pointer-events-none">
+                Click to pick
+              </div>
+            </div>
 
             {/* Name input */}
             <div className="space-y-2">
@@ -165,14 +182,21 @@ function ColorCard({
                   <Label className="text-xs">Hue</Label>
                   <span className="text-xs text-muted-foreground">{color.hsl.h}°</span>
                 </div>
-                <Slider
-                  value={[color.hsl.h]}
-                  min={0}
-                  max={360}
-                  step={1}
-                  onValueChange={([h]) => onUpdate({ hsl: { ...color.hsl, h } })}
-                  className="h-2"
-                />
+                <div 
+                  className="h-2 rounded-full"
+                  style={{
+                    background: "linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)"
+                  }}
+                >
+                  <Slider
+                    value={[color.hsl.h]}
+                    min={0}
+                    max={360}
+                    step={1}
+                    onValueChange={([h]) => onUpdate({ hsl: { ...color.hsl, h } })}
+                    className="h-2"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between">
@@ -227,7 +251,7 @@ function ColorCard({
 }
 
 export function PalettePanel({ designSystem }: PalettePanelProps) {
-  const { colors, updateColor, addColor, removeColor } = designSystem;
+  const { colors, updateColor, addColor, removeColor, applyPreset } = designSystem;
 
   // Group colors by category
   const bgColors = colors.filter(c => c.role === "background" || c.role === "surface");
@@ -237,86 +261,117 @@ export function PalettePanel({ designSystem }: PalettePanelProps) {
   );
 
   return (
-    <ScrollArea className="flex-1">
-      <div className="p-4 space-y-6">
-        {/* Header */}
-        <div>
-          <h2 className="font-display font-semibold text-lg mb-1">Color Palette</h2>
-          <p className="text-sm text-muted-foreground">
-            Define colors with semantic roles for your design system.
-          </p>
-        </div>
-
-        {/* Background Colors */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-            Backgrounds
-          </h3>
-          <div className="space-y-2">
-            <AnimatePresence mode="popLayout">
-              {bgColors.map((color) => (
-                <ColorCard
-                  key={color.id}
-                  color={color}
-                  onUpdate={(updates) => updateColor(color.id, updates)}
-                  onRemove={() => removeColor(color.id)}
-                  canRemove={bgColors.length > 1}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Text Colors */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-            Text
-          </h3>
-          <div className="space-y-2">
-            <AnimatePresence mode="popLayout">
-              {textColors.map((color) => (
-                <ColorCard
-                  key={color.id}
-                  color={color}
-                  onUpdate={(updates) => updateColor(color.id, updates)}
-                  onRemove={() => removeColor(color.id)}
-                  canRemove={textColors.length > 1}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Brand Colors */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-            Brand
-          </h3>
-          <div className="space-y-2">
-            <AnimatePresence mode="popLayout">
-              {brandColors.map((color) => (
-                <ColorCard
-                  key={color.id}
-                  color={color}
-                  onUpdate={(updates) => updateColor(color.id, updates)}
-                  onRemove={() => removeColor(color.id)}
-                  canRemove={brandColors.length > 1}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Add color button */}
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => addColor("accent")}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Color
-        </Button>
+    <div className="p-4 space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="font-display font-semibold text-lg mb-1">Color Palette</h2>
+        <p className="text-sm text-muted-foreground">
+          Define colors with semantic roles for your design system.
+        </p>
       </div>
-    </ScrollArea>
+
+      {/* Theme Presets */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <h3 className="text-sm font-medium">Start from a Theme</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {COLOR_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              onClick={() => applyPreset(preset.id)}
+              className="p-3 rounded-lg border border-border hover:border-primary/50 transition-all text-left group"
+            >
+              <div className="flex gap-1 mb-2">
+                {preset.colors.slice(4, 7).map((c, i) => (
+                  <div
+                    key={i}
+                    className="w-4 h-4 rounded-full border border-white/20"
+                    style={{ backgroundColor: c.hex }}
+                  />
+                ))}
+              </div>
+              <p className="text-xs font-medium truncate group-hover:text-primary transition-colors">
+                {preset.name}
+              </p>
+              <p className="text-[10px] text-muted-foreground truncate">
+                {preset.description}
+              </p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Background Colors */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+          Backgrounds
+        </h3>
+        <div className="space-y-2">
+          <AnimatePresence mode="popLayout">
+            {bgColors.map((color) => (
+              <ColorCard
+                key={color.id}
+                color={color}
+                onUpdate={(updates) => updateColor(color.id, updates)}
+                onRemove={() => removeColor(color.id)}
+                canRemove={bgColors.length > 1}
+              />
+            ))}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Text Colors */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+          Text
+        </h3>
+        <div className="space-y-2">
+          <AnimatePresence mode="popLayout">
+            {textColors.map((color) => (
+              <ColorCard
+                key={color.id}
+                color={color}
+                onUpdate={(updates) => updateColor(color.id, updates)}
+                onRemove={() => removeColor(color.id)}
+                canRemove={textColors.length > 1}
+              />
+            ))}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Brand Colors */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+          Brand
+        </h3>
+        <div className="space-y-2">
+          <AnimatePresence mode="popLayout">
+            {brandColors.map((color) => (
+              <ColorCard
+                key={color.id}
+                color={color}
+                onUpdate={(updates) => updateColor(color.id, updates)}
+                onRemove={() => removeColor(color.id)}
+                canRemove={brandColors.length > 1}
+              />
+            ))}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Add color button */}
+      <Button
+        variant="outline"
+        className="w-full"
+        onClick={() => addColor("accent")}
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        Add Color
+      </Button>
+    </div>
   );
 }

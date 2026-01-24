@@ -17,7 +17,9 @@ import {
   Monitor,
   Tablet,
   Smartphone,
-  RotateCcw
+  RotateCcw,
+  Paintbrush,
+  Eye
 } from "lucide-react";
 import { PalettePanel } from "@/components/workspace/PalettePanel";
 import { TypographyPanel } from "@/components/workspace/TypographyPanel";
@@ -42,7 +44,7 @@ export default function Workspace() {
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       {/* Header */}
-      <header className="h-14 border-b border-border flex items-center justify-between px-4 flex-shrink-0">
+      <header className="h-14 border-b border-border flex items-center justify-between px-4 flex-shrink-0 bg-card">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" asChild>
             <Link to="/" className="gap-2">
@@ -64,6 +66,7 @@ export default function Workspace() {
               size="icon"
               className="h-8 w-8"
               onClick={() => setPreviewSize("desktop")}
+              title="Desktop preview"
             >
               <Monitor className="w-4 h-4" />
             </Button>
@@ -72,6 +75,7 @@ export default function Workspace() {
               size="icon"
               className="h-8 w-8"
               onClick={() => setPreviewSize("tablet")}
+              title="Tablet preview"
             >
               <Tablet className="w-4 h-4" />
             </Button>
@@ -80,6 +84,7 @@ export default function Workspace() {
               size="icon"
               className="h-8 w-8"
               onClick={() => setPreviewSize("mobile")}
+              title="Mobile preview"
             >
               <Smartphone className="w-4 h-4" />
             </Button>
@@ -97,72 +102,85 @@ export default function Workspace() {
       </header>
 
       {/* Main content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Control Panel */}
           <ResizablePanel 
             defaultSize={35} 
             minSize={25} 
             maxSize={50}
-            className="bg-card"
+            className="bg-card flex flex-col"
           >
-            <div className="h-full flex flex-col">
-              <Tabs 
-                value={activeTab} 
-                onValueChange={setActiveTab}
-                className="flex-1 flex flex-col"
-              >
-                <div className="border-b border-border px-4 pt-4">
-                  <TabsList className="w-full grid grid-cols-4 h-10">
-                    <TabsTrigger value="palette" className="gap-1.5 text-xs">
-                      <Palette className="w-4 h-4" />
-                      <span className="hidden lg:inline">Palette</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="typography" className="gap-1.5 text-xs">
-                      <Type className="w-4 h-4" />
-                      <span className="hidden lg:inline">Type</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="accessibility" className="gap-1.5 text-xs">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span className="hidden lg:inline">A11y</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="export" className="gap-1.5 text-xs">
-                      <Download className="w-4 h-4" />
-                      <span className="hidden lg:inline">Export</span>
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-
-                <div className="flex-1 overflow-hidden">
-                  <TabsContent value="palette" className="h-full m-0 data-[state=active]:flex flex-col">
-                    <PalettePanel designSystem={designSystem} />
-                  </TabsContent>
-                  <TabsContent value="typography" className="h-full m-0 data-[state=active]:flex flex-col">
-                    <TypographyPanel designSystem={designSystem} />
-                  </TabsContent>
-                  <TabsContent value="accessibility" className="h-full m-0 data-[state=active]:flex flex-col">
-                    <AccessibilityPanel designSystem={designSystem} />
-                  </TabsContent>
-                  <TabsContent value="export" className="h-full m-0 data-[state=active]:flex flex-col">
-                    <ExportPanel designSystem={designSystem} />
-                  </TabsContent>
-                </div>
-              </Tabs>
+            {/* Panel Header */}
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/30">
+              <Paintbrush className="w-4 h-4 text-primary" />
+              <span className="font-medium text-sm">Design System Builder</span>
             </div>
+
+            <Tabs 
+              value={activeTab} 
+              onValueChange={setActiveTab}
+              className="flex-1 flex flex-col min-h-0"
+            >
+              <div className="border-b border-border px-4 pt-3 pb-0 flex-shrink-0">
+                <TabsList className="w-full grid grid-cols-4 h-10">
+                  <TabsTrigger value="palette" className="gap-1.5 text-xs">
+                    <Palette className="w-4 h-4" />
+                    <span className="hidden lg:inline">Palette</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="typography" className="gap-1.5 text-xs">
+                    <Type className="w-4 h-4" />
+                    <span className="hidden lg:inline">Type</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="accessibility" className="gap-1.5 text-xs">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span className="hidden lg:inline">A11y</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="export" className="gap-1.5 text-xs">
+                    <Download className="w-4 h-4" />
+                    <span className="hidden lg:inline">Export</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <TabsContent value="palette" className="h-full m-0 overflow-y-auto">
+                  <PalettePanel designSystem={designSystem} />
+                </TabsContent>
+                <TabsContent value="typography" className="h-full m-0 overflow-y-auto">
+                  <TypographyPanel designSystem={designSystem} />
+                </TabsContent>
+                <TabsContent value="accessibility" className="h-full m-0 overflow-y-auto">
+                  <AccessibilityPanel designSystem={designSystem} />
+                </TabsContent>
+                <TabsContent value="export" className="h-full m-0 overflow-y-auto">
+                  <ExportPanel designSystem={designSystem} />
+                </TabsContent>
+              </div>
+            </Tabs>
           </ResizablePanel>
 
           <ResizableHandle withHandle />
 
           {/* Preview Panel */}
-          <ResizablePanel defaultSize={65} minSize={40}>
-            <div className="h-full bg-muted/30 p-6 overflow-auto">
+          <ResizablePanel defaultSize={65} minSize={40} className="flex flex-col">
+            {/* Preview Header */}
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/30">
+              <Eye className="w-4 h-4 text-accent" />
+              <span className="font-medium text-sm">Live Preview</span>
+              <span className="text-xs text-muted-foreground ml-2">
+                Changes update in real-time
+              </span>
+            </div>
+
+            <div className="flex-1 bg-muted/30 p-6 overflow-auto">
               <motion.div
                 className="mx-auto h-full"
                 style={{ maxWidth: previewWidths[previewSize] }}
                 layout
                 transition={{ duration: 0.3, ease: "easeInOut" }}
               >
-                <div className="bg-card border border-border rounded-xl shadow-lg overflow-hidden h-full">
+                <div className="bg-card border border-border rounded-xl shadow-lg overflow-hidden h-full min-h-[600px]">
                   <LivePreview designSystem={designSystem} />
                 </div>
               </motion.div>

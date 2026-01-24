@@ -82,7 +82,6 @@ export const GOOGLE_FONTS = [
   "Urbanist",
   "Figtree",
   "Albert Sans",
-  "General Sans",
   // Serif options
   "Playfair Display",
   "Merriweather",
@@ -98,15 +97,130 @@ export const GOOGLE_FONTS = [
   "IBM Plex Mono",
 ];
 
-const DEFAULT_COLORS: ColorEntry[] = [
-  { id: "1", role: "background", name: "Background", hex: "#FAFAF9", hsl: { h: 40, s: 20, l: 98 } },
-  { id: "2", role: "surface", name: "Surface", hex: "#FFFFFF", hsl: { h: 0, s: 0, l: 100 } },
-  { id: "3", role: "text", name: "Text", hex: "#1A1A2E", hsl: { h: 240, s: 28, l: 14 } },
-  { id: "4", role: "textMuted", name: "Text Muted", hex: "#6B7280", hsl: { h: 220, s: 9, l: 46 } },
-  { id: "5", role: "primary", name: "Primary", hex: "#5B4CDB", hsl: { h: 250, s: 60, l: 45 } },
-  { id: "6", role: "secondary", name: "Secondary", hex: "#F97316", hsl: { h: 25, s: 95, l: 53 } },
-  { id: "7", role: "accent", name: "Accent", hex: "#14B8A6", hsl: { h: 172, s: 80, l: 40 } },
+// Preset color themes
+export interface ColorPreset {
+  id: string;
+  name: string;
+  description: string;
+  colors: Omit<ColorEntry, "id">[];
+}
+
+export const COLOR_PRESETS: ColorPreset[] = [
+  {
+    id: "default",
+    name: "Studio Default",
+    description: "Clean, professional palette with indigo primary",
+    colors: [
+      { role: "background", name: "Background", hex: "#FAFAF9", hsl: { h: 40, s: 20, l: 98 } },
+      { role: "surface", name: "Surface", hex: "#FFFFFF", hsl: { h: 0, s: 0, l: 100 } },
+      { role: "text", name: "Text", hex: "#1A1A2E", hsl: { h: 240, s: 28, l: 14 } },
+      { role: "textMuted", name: "Text Muted", hex: "#6B7280", hsl: { h: 220, s: 9, l: 46 } },
+      { role: "primary", name: "Primary", hex: "#5B4CDB", hsl: { h: 250, s: 60, l: 45 } },
+      { role: "secondary", name: "Secondary", hex: "#F97316", hsl: { h: 25, s: 95, l: 53 } },
+      { role: "accent", name: "Accent", hex: "#14B8A6", hsl: { h: 172, s: 80, l: 40 } },
+    ],
+  },
+  {
+    id: "ocean",
+    name: "Ocean Depths",
+    description: "Cool blues and teals inspired by the sea",
+    colors: [
+      { role: "background", name: "Background", hex: "#F0F9FF", hsl: { h: 204, s: 100, l: 97 } },
+      { role: "surface", name: "Surface", hex: "#FFFFFF", hsl: { h: 0, s: 0, l: 100 } },
+      { role: "text", name: "Text", hex: "#0C4A6E", hsl: { h: 202, s: 80, l: 24 } },
+      { role: "textMuted", name: "Text Muted", hex: "#64748B", hsl: { h: 215, s: 16, l: 47 } },
+      { role: "primary", name: "Primary", hex: "#0284C7", hsl: { h: 200, s: 98, l: 39 } },
+      { role: "secondary", name: "Secondary", hex: "#06B6D4", hsl: { h: 188, s: 95, l: 43 } },
+      { role: "accent", name: "Accent", hex: "#8B5CF6", hsl: { h: 263, s: 90, l: 66 } },
+    ],
+  },
+  {
+    id: "forest",
+    name: "Forest Grove",
+    description: "Natural greens and earthy tones",
+    colors: [
+      { role: "background", name: "Background", hex: "#F5F5F4", hsl: { h: 60, s: 5, l: 96 } },
+      { role: "surface", name: "Surface", hex: "#FAFAF9", hsl: { h: 60, s: 9, l: 98 } },
+      { role: "text", name: "Text", hex: "#1C1917", hsl: { h: 24, s: 10, l: 10 } },
+      { role: "textMuted", name: "Text Muted", hex: "#57534E", hsl: { h: 25, s: 5, l: 32 } },
+      { role: "primary", name: "Primary", hex: "#16A34A", hsl: { h: 142, s: 76, l: 36 } },
+      { role: "secondary", name: "Secondary", hex: "#84CC16", hsl: { h: 84, s: 81, l: 44 } },
+      { role: "accent", name: "Accent", hex: "#D97706", hsl: { h: 32, s: 95, l: 44 } },
+    ],
+  },
+  {
+    id: "sunset",
+    name: "Golden Sunset",
+    description: "Warm oranges, pinks, and golden hues",
+    colors: [
+      { role: "background", name: "Background", hex: "#FFFBEB", hsl: { h: 48, s: 100, l: 96 } },
+      { role: "surface", name: "Surface", hex: "#FFFFFF", hsl: { h: 0, s: 0, l: 100 } },
+      { role: "text", name: "Text", hex: "#451A03", hsl: { h: 21, s: 90, l: 14 } },
+      { role: "textMuted", name: "Text Muted", hex: "#78716C", hsl: { h: 30, s: 6, l: 45 } },
+      { role: "primary", name: "Primary", hex: "#EA580C", hsl: { h: 21, s: 90, l: 48 } },
+      { role: "secondary", name: "Secondary", hex: "#DB2777", hsl: { h: 330, s: 81, l: 50 } },
+      { role: "accent", name: "Accent", hex: "#FBBF24", hsl: { h: 43, s: 96, l: 56 } },
+    ],
+  },
+  {
+    id: "midnight",
+    name: "Midnight Mode",
+    description: "Dark theme with vibrant accents",
+    colors: [
+      { role: "background", name: "Background", hex: "#0F172A", hsl: { h: 222, s: 47, l: 11 } },
+      { role: "surface", name: "Surface", hex: "#1E293B", hsl: { h: 217, s: 33, l: 17 } },
+      { role: "text", name: "Text", hex: "#F1F5F9", hsl: { h: 210, s: 40, l: 96 } },
+      { role: "textMuted", name: "Text Muted", hex: "#94A3B8", hsl: { h: 215, s: 20, l: 65 } },
+      { role: "primary", name: "Primary", hex: "#818CF8", hsl: { h: 239, s: 84, l: 67 } },
+      { role: "secondary", name: "Secondary", hex: "#F472B6", hsl: { h: 330, s: 86, l: 70 } },
+      { role: "accent", name: "Accent", hex: "#34D399", hsl: { h: 160, s: 64, l: 52 } },
+    ],
+  },
+  {
+    id: "lavender",
+    name: "Lavender Dreams",
+    description: "Soft purples and calming pastels",
+    colors: [
+      { role: "background", name: "Background", hex: "#FAF5FF", hsl: { h: 280, s: 100, l: 98 } },
+      { role: "surface", name: "Surface", hex: "#FFFFFF", hsl: { h: 0, s: 0, l: 100 } },
+      { role: "text", name: "Text", hex: "#3B0764", hsl: { h: 274, s: 87, l: 21 } },
+      { role: "textMuted", name: "Text Muted", hex: "#7C3AED", hsl: { h: 263, s: 83, l: 58 } },
+      { role: "primary", name: "Primary", hex: "#9333EA", hsl: { h: 271, s: 81, l: 56 } },
+      { role: "secondary", name: "Secondary", hex: "#EC4899", hsl: { h: 330, s: 81, l: 60 } },
+      { role: "accent", name: "Accent", hex: "#06B6D4", hsl: { h: 188, s: 95, l: 43 } },
+    ],
+  },
+  {
+    id: "monochrome",
+    name: "Monochrome",
+    description: "Elegant grayscale with a single accent",
+    colors: [
+      { role: "background", name: "Background", hex: "#FAFAFA", hsl: { h: 0, s: 0, l: 98 } },
+      { role: "surface", name: "Surface", hex: "#FFFFFF", hsl: { h: 0, s: 0, l: 100 } },
+      { role: "text", name: "Text", hex: "#171717", hsl: { h: 0, s: 0, l: 9 } },
+      { role: "textMuted", name: "Text Muted", hex: "#737373", hsl: { h: 0, s: 0, l: 45 } },
+      { role: "primary", name: "Primary", hex: "#171717", hsl: { h: 0, s: 0, l: 9 } },
+      { role: "secondary", name: "Secondary", hex: "#525252", hsl: { h: 0, s: 0, l: 32 } },
+      { role: "accent", name: "Accent", hex: "#EF4444", hsl: { h: 0, s: 84, l: 60 } },
+    ],
+  },
+  {
+    id: "corporate",
+    name: "Corporate Blue",
+    description: "Professional blues for business applications",
+    colors: [
+      { role: "background", name: "Background", hex: "#F8FAFC", hsl: { h: 210, s: 40, l: 98 } },
+      { role: "surface", name: "Surface", hex: "#FFFFFF", hsl: { h: 0, s: 0, l: 100 } },
+      { role: "text", name: "Text", hex: "#0F172A", hsl: { h: 222, s: 47, l: 11 } },
+      { role: "textMuted", name: "Text Muted", hex: "#64748B", hsl: { h: 215, s: 16, l: 47 } },
+      { role: "primary", name: "Primary", hex: "#2563EB", hsl: { h: 217, s: 91, l: 60 } },
+      { role: "secondary", name: "Secondary", hex: "#3B82F6", hsl: { h: 217, s: 91, l: 60 } },
+      { role: "accent", name: "Accent", hex: "#10B981", hsl: { h: 160, s: 84, l: 39 } },
+    ],
+  },
 ];
+
+const DEFAULT_COLORS = COLOR_PRESETS[0].colors.map((c, i) => ({ ...c, id: String(i + 1) }));
 
 const DEFAULT_TYPOGRAPHY: TypographyScale = {
   baseSize: 16,
@@ -224,6 +338,14 @@ export function useDesignSystem() {
     setColors(prev => prev.filter(c => c.id !== id));
   }, []);
 
+  // Apply preset
+  const applyPreset = useCallback((presetId: string) => {
+    const preset = COLOR_PRESETS.find(p => p.id === presetId);
+    if (preset) {
+      setColors(preset.colors.map((c, i) => ({ ...c, id: String(Date.now() + i) })));
+    }
+  }, []);
+
   // Typography operations
   const updateTypography = useCallback((updates: Partial<Omit<TypographyScale, "steps">>) => {
     setTypography(prev => {
@@ -300,6 +422,7 @@ export function useDesignSystem() {
     updateColor,
     addColor,
     removeColor,
+    applyPreset,
     updateTypography,
     getContrastResults,
     getColorByRole,
