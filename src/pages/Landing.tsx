@@ -599,8 +599,18 @@ export default function Landing() {
       <footer className="py-8 border-t border-border">
         <div className="container">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <p>© 2025 ChromaType Studio</p>
-            <p>Built with accessibility in mind</p>
+            <p>
+              © 2025-2026{' '}
+              <a
+                href="https://andreasjohanssonux.netlify.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors underline underline-offset-4"
+              >
+                Andreas Johansson
+              </a>
+            </p>
+            <p>Built with accessibility in mind!</p>
           </div>
         </div>
       </footer>
