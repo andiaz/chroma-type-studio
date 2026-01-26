@@ -73,21 +73,28 @@ export function ExportPanel({ designSystem }: ExportPanelProps) {
   const hasIssues = contrastResults.some(r => !r.aa);
   const failingCount = contrastResults.filter(r => !r.aaLarge).length;
 
+  // Default spacing scale (based on Refactoring UI)
+  const spacingScale = [4, 8, 16, 24, 32, 40, 48, 64, 96, 128, 192, 256, 384, 512, 640, 768];
+
   // Generate CSS variables
   const cssCode = useMemo(() => {
-    const colorVars = colors.map(c => 
+    const colorVars = colors.map(c =>
       `  --color-${c.role}: ${c.hex};`
     ).join("\n");
 
     const fontVars = `  --font-heading: "${typography.headingFont}", sans-serif;
   --font-body: "${typography.bodyFont}", sans-serif;`;
 
-    const scaleVars = typography.steps.map(s => 
+    const scaleVars = typography.steps.map(s =>
       `  --text-${s.name}: ${s.size.toFixed(2)}px;`
     ).join("\n");
 
-    const lineHeightVars = typography.steps.map(s => 
+    const lineHeightVars = typography.steps.map(s =>
       `  --leading-${s.name}: ${s.lineHeight};`
+    ).join("\n");
+
+    const spacingVars = spacingScale.map(s =>
+      `  --space-${s}: ${s}px;`
     ).join("\n");
 
     return `:root {
@@ -102,20 +109,27 @@ ${scaleVars}
 
   /* Line Heights */
 ${lineHeightVars}
+
+  /* Spacing */
+${spacingVars}
 }`;
   }, [colors, typography]);
 
   // Generate SCSS variables
   const scssCode = useMemo(() => {
-    const colorVars = colors.map(c => 
+    const colorVars = colors.map(c =>
       `$color-${c.role}: ${c.hex};`
     ).join("\n");
 
     const fontVars = `$font-heading: "${typography.headingFont}", sans-serif;
 $font-body: "${typography.bodyFont}", sans-serif;`;
 
-    const scaleVars = typography.steps.map(s => 
+    const scaleVars = typography.steps.map(s =>
       `$text-${s.name}: ${s.size.toFixed(2)}px;`
+    ).join("\n");
+
+    const spacingVars = spacingScale.map(s =>
+      `$space-${s}: ${s}px;`
     ).join("\n");
 
     return `// Colors
@@ -125,7 +139,10 @@ ${colorVars}
 ${fontVars}
 
 // Type Scale
-${scaleVars}`;
+${scaleVars}
+
+// Spacing
+${spacingVars}`;
   }, [colors, typography]);
 
   // Generate JSON
@@ -154,6 +171,10 @@ ${scaleVars}`;
         baseSize: typography.baseSize,
         scaleRatio: typography.scaleRatio,
       },
+      spacing: spacingScale.reduce((acc, s) => ({
+        ...acc,
+        [s]: `${s}px`,
+      }), {}),
     }, null, 2);
   }, [colors, typography]);
 

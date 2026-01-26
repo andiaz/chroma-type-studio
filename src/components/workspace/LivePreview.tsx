@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { DesignSystem } from "@/hooks/useDesignSystem";
@@ -34,6 +34,23 @@ export function LivePreview({ designSystem }: LivePreviewProps) {
       steps: typography.steps,
     };
   }, [colors, typography, getColorByRole]);
+
+  // Load fonts dynamically so preview shows correct fonts immediately
+  useEffect(() => {
+    const fonts = [typography.headingFont, typography.bodyFont].filter(Boolean);
+    const uniqueFonts = [...new Set(fonts)];
+
+    uniqueFonts.forEach(font => {
+      const link = document.createElement("link");
+      link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`;
+      link.rel = "stylesheet";
+
+      // Check if already loaded
+      if (!document.querySelector(`link[href="${link.href}"]`)) {
+        document.head.appendChild(link);
+      }
+    });
+  }, [typography.headingFont, typography.bodyFont]);
 
   const getSize = (name: string) => {
     const step = styles.steps.find(s => s.name === name);

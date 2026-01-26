@@ -228,21 +228,30 @@ function ColorCard({
               </div>
             </div>
 
-            {/* Delete button */}
-            {canRemove && (
+            {/* Action buttons */}
+            <div className="flex gap-2 pt-2 border-t border-border">
               <Button
-                variant="destructive"
                 size="sm"
-                className="w-full"
-                onClick={() => {
-                  onRemove();
-                  setIsOpen(false);
-                }}
+                className="flex-1"
+                onClick={() => setIsOpen(false)}
               >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Remove Color
+                Done
               </Button>
-            )}
+              {canRemove && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-muted-foreground hover:text-destructive hover:border-destructive hover:bg-destructive/10"
+                  onClick={() => {
+                    onRemove();
+                    setIsOpen(false);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Remove
+                </Button>
+              )}
+            </div>
           </div>
         </PopoverContent>
       </Popover>

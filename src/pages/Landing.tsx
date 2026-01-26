@@ -15,27 +15,27 @@ import {
 } from 'lucide-react';
 
 const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0 },
   transition: {
-    duration: 0.65,
-    ease: [0.25, 0.1, 0.25, 1], // Smooth cubic bezier
+    duration: 0.5,
+    ease: 'easeOut',
   },
 };
 
 const fadeInUpSmooth = {
-  initial: { opacity: 0, y: 15 },
+  initial: { opacity: 0, y: 10 },
   animate: { opacity: 1, y: 0 },
   transition: {
-    duration: 0.7,
-    ease: [0.33, 1, 0.68, 1], // Expo easing
+    duration: 0.5,
+    ease: 'easeOut',
   },
 };
 
 const staggerContainer = {
   animate: {
     transition: {
-      staggerChildren: 0.1,
+      staggerChildren: 0.08,
     },
   },
 };
@@ -60,9 +60,9 @@ const features = [
   },
   {
     icon: CheckCircle2,
-    title: 'WCAG Compliance',
+    title: 'WCAG Contrast Checks',
     description:
-      'Automatically check contrast ratios for AA and AAA accessibility standards.',
+      'Check contrast ratios against AA and AAA standards to help improve accessibility.',
   },
   {
     icon: Download,
@@ -103,9 +103,9 @@ export default function Landing() {
           <div className="absolute -bottom-1/2 -left-1/4 w-[600px] h-[600px] rounded-full bg-accent/5 blur-3xl" />
         </div>
 
-        <div className="container relative pt-24 pb-20 md:pt-32 md:pb-28">
+        <div className="container relative pt-20 pb-12 md:pt-32 md:pb-28">
           <motion.div
-            className="max-w-4xl mx-auto text-center"
+            className="max-w-4xl mx-auto text-center gpu-accelerated"
             initial="initial"
             animate="animate"
             variants={staggerContainer}
@@ -135,7 +135,7 @@ export default function Landing() {
             >
               An all-in-one workspace for color palettes, typography scales, and{' '}
               <span className="text-foreground font-medium">
-                WCAG-safe design systems
+                accessibility-aware design systems
               </span>
               .
             </motion.p>
@@ -168,17 +168,14 @@ export default function Landing() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 md:py-28 bg-muted/30">
+      <section className="py-12 md:py-28 bg-muted/30">
         <div className="container">
           <motion.div
             className="text-center mb-16"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{
-              duration: 0.6,
-              ease: [0.25, 0.1, 0.25, 1], // Smooth cubic bezier easing
-            }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
           >
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
               What you can do
@@ -197,8 +194,7 @@ export default function Landing() {
             variants={{
               animate: {
                 transition: {
-                  staggerChildren: 0.12,
-                  ease: 'easeOut',
+                  staggerChildren: 0.08,
                 },
               },
             }}
@@ -207,13 +203,13 @@ export default function Landing() {
               <motion.div
                 key={feature.title}
                 variants={{
-                  initial: { opacity: 0, y: 12 },
+                  initial: { opacity: 0, y: 10 },
                   animate: {
                     opacity: 1,
                     y: 0,
                     transition: {
-                      duration: 0.7,
-                      ease: [0.22, 1, 0.36, 1], // Smooth custom easing
+                      duration: 0.4,
+                      ease: 'easeOut',
                     },
                   },
                 }}
@@ -285,54 +281,54 @@ export default function Landing() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="relative"
             >
-              <div className="aspect-square max-w-md mx-auto relative">
+              <div className="aspect-square max-w-xs sm:max-w-sm md:max-w-md mx-auto relative">
                 {/* Floating cards representing old workflow */}
-                <div className="absolute top-0 left-0 w-32 h-24 rounded-lg bg-card border border-border shadow-lg p-3 animate-float">
-                  <div className="w-full h-3 rounded bg-muted mb-2" />
+                <div className="absolute -top-2 -left-2 sm:top-0 sm:left-0 w-24 sm:w-28 md:w-32 h-20 sm:h-22 md:h-24 rounded-lg bg-card border border-border shadow-lg p-2 sm:p-3 animate-float">
+                  <div className="w-full h-2 sm:h-3 rounded bg-muted mb-2" />
                   <div className="flex gap-1">
-                    <div className="w-4 h-4 rounded bg-primary/30" />
-                    <div className="w-4 h-4 rounded bg-secondary/30" />
-                    <div className="w-4 h-4 rounded bg-accent/30" />
+                    <div className="w-3 sm:w-4 h-3 sm:h-4 rounded bg-primary/30" />
+                    <div className="w-3 sm:w-4 h-3 sm:h-4 rounded bg-secondary/30" />
+                    <div className="w-3 sm:w-4 h-3 sm:h-4 rounded bg-accent/30" />
                   </div>
-                  <span className="text-[10px] text-muted-foreground mt-2 block">
+                  <span className="text-[8px] sm:text-[10px] text-muted-foreground mt-1 sm:mt-2 block">
                     Palette Tool
                   </span>
                 </div>
 
                 <div
-                  className="absolute top-1/4 right-0 w-32 h-24 rounded-lg bg-card border border-border shadow-lg p-3 animate-float"
+                  className="absolute top-[15%] sm:top-1/4 -right-2 sm:right-0 w-24 sm:w-28 md:w-32 h-20 sm:h-22 md:h-24 rounded-lg bg-card border border-border shadow-lg p-2 sm:p-3 animate-float"
                   style={{ animationDelay: '0.5s' }}
                 >
                   <div className="space-y-1">
-                    <div className="w-full h-2 rounded bg-muted" />
-                    <div className="w-3/4 h-2 rounded bg-muted" />
-                    <div className="w-1/2 h-2 rounded bg-muted" />
+                    <div className="w-full h-1.5 sm:h-2 rounded bg-muted" />
+                    <div className="w-3/4 h-1.5 sm:h-2 rounded bg-muted" />
+                    <div className="w-1/2 h-1.5 sm:h-2 rounded bg-muted" />
                   </div>
-                  <span className="text-[10px] text-muted-foreground mt-2 block">
+                  <span className="text-[8px] sm:text-[10px] text-muted-foreground mt-1 sm:mt-2 block">
                     Type Scale
                   </span>
                 </div>
 
                 <div
-                  className="absolute bottom-1/4 left-1/4 w-32 h-24 rounded-lg bg-card border border-border shadow-lg p-3 animate-float"
+                  className="absolute -bottom-2 -left-2 sm:bottom-0 sm:left-0 w-24 sm:w-28 md:w-32 h-20 sm:h-22 md:h-24 rounded-lg bg-card border border-border shadow-lg p-2 sm:p-3 animate-float"
                   style={{ animationDelay: '1s' }}
                 >
-                  <div className="flex items-center gap-1 mb-2">
-                    <div className="w-3 h-3 rounded-full bg-success" />
-                    <div className="w-3 h-3 rounded-full bg-warning" />
-                    <div className="w-3 h-3 rounded-full bg-destructive" />
+                  <div className="flex items-center gap-1 mb-1 sm:mb-2">
+                    <div className="w-2 sm:w-3 h-2 sm:h-3 rounded-full bg-success" />
+                    <div className="w-2 sm:w-3 h-2 sm:h-3 rounded-full bg-warning" />
+                    <div className="w-2 sm:w-3 h-2 sm:h-3 rounded-full bg-destructive" />
                   </div>
-                  <div className="w-full h-2 rounded bg-muted" />
-                  <span className="text-[10px] text-muted-foreground mt-2 block">
+                  <div className="w-full h-1.5 sm:h-2 rounded bg-muted" />
+                  <span className="text-[8px] sm:text-[10px] text-muted-foreground mt-1 sm:mt-2 block">
                     Contrast Check
                   </span>
                 </div>
 
                 {/* Center unified solution */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-2xl bg-gradient-primary shadow-glow flex items-center justify-center">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 sm:w-32 md:w-40 h-28 sm:h-32 md:h-40 rounded-2xl bg-gradient-primary shadow-glow flex items-center justify-center">
                   <div className="text-center text-primary-foreground">
-                    <Layers className="w-10 h-10 mx-auto mb-2" />
-                    <span className="text-sm font-medium">All-in-One</span>
+                    <Layers className="w-7 sm:w-8 md:w-10 h-7 sm:h-8 md:h-10 mx-auto mb-1 sm:mb-2" />
+                    <span className="text-xs sm:text-sm font-medium">All-in-One</span>
                   </div>
                 </div>
               </div>
@@ -561,18 +557,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Portfolio Note */}
-      <section className="py-12 border-t border-border">
-        <div className="container">
-          <p className="text-center text-sm text-muted-foreground max-w-2xl mx-auto">
-            <span className="font-medium text-foreground">Portfolio note:</span>{' '}
-            ChromaType Studio is a standalone, free web tool built as a design
-            and engineering portfolio project focused on workflow efficiency and
-            accessibility-driven design systems.
-          </p>
-        </div>
-      </section>
-
       {/* Final CTA */}
       <section className="py-20 md:py-28">
         <div className="container">
@@ -610,7 +594,7 @@ export default function Landing() {
                 Andreas Johansson
               </a>
             </p>
-            <p>Built with accessibility in mind!</p>
+            <p>Built with designers in mind.</p>
           </div>
         </div>
       </footer>
