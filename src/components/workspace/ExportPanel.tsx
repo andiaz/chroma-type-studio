@@ -4,14 +4,15 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Copy, 
-  Check, 
-  Download, 
-  CheckCircle2, 
+import {
+  Copy,
+  Check,
+  Download,
+  CheckCircle2,
   AlertTriangle,
   FileCode,
-  FileJson
+  FileJson,
+  FileText
 } from "lucide-react";
 import { DesignSystem } from "@/hooks/useDesignSystem";
 import { cn } from "@/lib/utils";
@@ -20,11 +21,11 @@ interface ExportPanelProps {
   designSystem: DesignSystem;
 }
 
-function CodeBlock({ 
-  code, 
-  language 
-}: { 
-  code: string; 
+function CodeBlock({
+  code,
+  language
+}: {
+  code: string;
   language: string;
 }) {
   const [copied, setCopied] = useState(false);
@@ -36,13 +37,13 @@ function CodeBlock({
   };
 
   return (
-    <div className="relative rounded-lg border border-border overflow-hidden">
+    <div className="relative rounded-lg border border-border overflow-hidden min-w-0 w-full">
       <div className="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
         <span className="text-xs text-muted-foreground font-mono">{language}</span>
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs gap-1.5"
+          className="h-7 text-xs gap-1.5 flex-shrink-0"
           onClick={copyCode}
         >
           {copied ? (
@@ -58,9 +59,11 @@ function CodeBlock({
           )}
         </Button>
       </div>
-      <pre className="p-4 overflow-x-auto text-xs font-mono bg-muted/30">
-        <code>{code}</code>
-      </pre>
+      <div className="max-h-64 overflow-auto bg-muted/30">
+        <pre className="p-4 text-xs font-mono whitespace-pre-wrap break-all overflow-hidden">
+          <code className="block">{code}</code>
+        </pre>
+      </div>
     </div>
   );
 }
@@ -70,8 +73,8 @@ export function ExportPanel({ designSystem }: ExportPanelProps) {
   const [exportFormat, setExportFormat] = useState("css");
 
   const contrastResults = useMemo(() => getContrastResults(), [getContrastResults]);
-  const hasIssues = contrastResults.some(r => !r.aa);
-  const failingCount = contrastResults.filter(r => !r.aaLarge).length;
+  const failingCount = contrastResults.filter(r => !r.aa).length;
+  const hasIssues = failingCount > 0;
 
   // Default spacing scale (based on Refactoring UI)
   const spacingScale = [4, 8, 16, 24, 32, 40, 48, 64, 96, 128, 192, 256, 384, 512, 640, 768];
@@ -178,6 +181,412 @@ ${spacingVars}`;
     }, null, 2);
   }, [colors, typography]);
 
+  // Generate complete HTML demo page
+  const htmlCode = useMemo(() => {
+    const googleFontsUrl = `https://fonts.googleapis.com/css2?family=${typography.headingFont.replace(/ /g, "+")}:wght@400;500;600;700&family=${typography.bodyFont.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`;
+
+    const getSize = (name: string) => {
+      const step = typography.steps.find(s => s.name === name);
+      return step ? step.size.toFixed(2) : "16";
+    };
+
+    const getLineHeight = (name: string) => {
+      const step = typography.steps.find(s => s.name === name);
+      return step ? step.lineHeight : 1.5;
+    };
+
+    const bg = colors.find(c => c.role === "background")?.hex || "#FAFAF9";
+    const surface = colors.find(c => c.role === "surface")?.hex || "#FFFFFF";
+    const text = colors.find(c => c.role === "text")?.hex || "#1A1A2E";
+    const textMuted = colors.find(c => c.role === "textMuted")?.hex || "#6B7280";
+    const primary = colors.find(c => c.role === "primary")?.hex || "#5B4CDB";
+    const secondary = colors.find(c => c.role === "secondary")?.hex || "#F97316";
+    const accent = colors.find(c => c.role === "accent")?.hex || "#14B8A6";
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design System Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="${googleFontsUrl}" rel="stylesheet">
+  <style>
+${cssCode}
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--color-background);
+      color: var(--color-text);
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      line-height: ${getLineHeight("base")};
+    }
+
+    /* Header */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: var(--space-16) var(--space-24);
+      background-color: var(--color-surface);
+      border-bottom: 1px solid ${text}15;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      font-family: var(--font-heading);
+      font-size: var(--text-lg);
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: var(--space-24);
+    }
+
+    .nav a {
+      color: var(--color-text);
+      text-decoration: none;
+      font-size: var(--text-sm);
+      transition: opacity 0.2s;
+    }
+
+    .nav a:hover {
+      opacity: 0.7;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-8);
+      padding: var(--space-8) var(--space-16);
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: var(--text-sm);
+      text-decoration: none;
+      transition: opacity 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn-primary {
+      background-color: var(--color-primary);
+      color: var(--color-surface);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid ${text}20;
+      color: var(--color-text);
+    }
+
+    /* Hero */
+    .hero {
+      padding: var(--space-64) var(--space-24);
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: var(--space-4) var(--space-16);
+      border-radius: 999px;
+      background-color: ${accent}20;
+      color: var(--color-accent);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      margin-bottom: var(--space-16);
+    }
+
+    .hero h1 {
+      font-family: var(--font-heading);
+      font-size: var(--text-4xl);
+      font-weight: 700;
+      line-height: ${getLineHeight("4xl")};
+      margin-bottom: var(--space-16);
+    }
+
+    .hero h1 span {
+      color: var(--color-primary);
+    }
+
+    .hero p {
+      color: var(--color-textMuted);
+      font-size: var(--text-lg);
+      line-height: ${getLineHeight("lg")};
+      margin-bottom: var(--space-32);
+    }
+
+    .hero-buttons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-16);
+    }
+
+    /* Features */
+    .features {
+      padding: var(--space-48) var(--space-24);
+      background-color: ${text}05;
+    }
+
+    .features-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .features h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: var(--space-32);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--space-16);
+    }
+
+    .feature-card {
+      padding: var(--space-24);
+      background-color: var(--color-surface);
+      border: 1px solid ${text}10;
+      border-radius: 12px;
+    }
+
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-16);
+      font-size: var(--text-lg);
+    }
+
+    .feature-card h3 {
+      font-family: var(--font-heading);
+      font-size: var(--text-lg);
+      font-weight: 600;
+      margin-bottom: var(--space-8);
+    }
+
+    .feature-card p {
+      color: var(--color-textMuted);
+      font-size: var(--text-sm);
+    }
+
+    /* Pricing */
+    .pricing {
+      padding: var(--space-48) var(--space-24);
+    }
+
+    .pricing-card {
+      max-width: 360px;
+      margin: 0 auto;
+      padding: var(--space-24);
+      background-color: var(--color-surface);
+      border: 2px solid var(--color-primary);
+      border-radius: 16px;
+    }
+
+    .pricing-badge {
+      display: inline-block;
+      padding: var(--space-4) var(--space-16);
+      background-color: var(--color-secondary);
+      color: var(--color-surface);
+      font-size: var(--text-xs);
+      font-weight: 500;
+      border-radius: 999px;
+      margin-bottom: var(--space-16);
+    }
+
+    .pricing-card h3 {
+      font-family: var(--font-heading);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      margin-bottom: var(--space-8);
+    }
+
+    .pricing-amount {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-4);
+      margin-bottom: var(--space-16);
+    }
+
+    .pricing-amount .price {
+      font-family: var(--font-heading);
+      font-size: var(--text-3xl);
+      font-weight: 700;
+    }
+
+    .pricing-amount .period {
+      color: var(--color-textMuted);
+      font-size: var(--text-sm);
+    }
+
+    .pricing-features {
+      list-style: none;
+      margin-bottom: var(--space-24);
+    }
+
+    .pricing-features li {
+      display: flex;
+      align-items: center;
+      gap: var(--space-8);
+      font-size: var(--text-sm);
+      margin-bottom: var(--space-8);
+    }
+
+    .pricing-features li::before {
+      content: "✓";
+      color: var(--color-accent);
+      font-weight: 600;
+    }
+
+    .pricing-card .btn {
+      width: 100%;
+      justify-content: center;
+      padding: var(--space-16);
+    }
+
+    /* Footer */
+    .footer {
+      padding: var(--space-32) var(--space-24);
+      border-top: 1px solid ${text}15;
+      color: var(--color-textMuted);
+      font-size: var(--text-sm);
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: var(--space-16);
+    }
+
+    .footer-links a {
+      color: var(--color-textMuted);
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .footer-links a:hover {
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">Brand</div>
+      <nav class="nav">
+        <a href="#">Features</a>
+        <a href="#">Pricing</a>
+        <button class="btn btn-primary">Get Started</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <span class="badge">New Release</span>
+    <h1>Build something<br><span>amazing</span> today</h1>
+    <p>The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+    <div class="hero-buttons">
+      <button class="btn btn-primary">Get Started →</button>
+      <button class="btn btn-outline">Learn More</button>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <div class="features-inner">
+      <h2>Features</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon" style="background-color: ${primary}20; color: ${primary};">⚡</div>
+          <h3>Fast</h3>
+          <p>Lightning quick performance</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background-color: ${secondary}20; color: ${secondary};">🔒</div>
+          <h3>Secure</h3>
+          <p>Enterprise-grade security</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background-color: ${accent}20; color: ${accent};">✨</div>
+          <h3>Simple</h3>
+          <p>Easy to get started</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="pricing">
+    <div class="pricing-card">
+      <span class="pricing-badge">Popular</span>
+      <h3>Pro Plan</h3>
+      <div class="pricing-amount">
+        <span class="price">$29</span>
+        <span class="period">/month</span>
+      </div>
+      <ul class="pricing-features">
+        <li>Unlimited projects</li>
+        <li>Priority support</li>
+        <li>Advanced analytics</li>
+      </ul>
+      <button class="btn btn-primary">Subscribe</button>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>© 2025 Brand. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>`;
+  }, [colors, typography, cssCode]);
+
   const downloadFile = (content: string, filename: string) => {
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
@@ -190,7 +599,7 @@ ${spacingVars}`;
 
   return (
     <ScrollArea className="flex-1">
-      <div className="p-4 space-y-6">
+      <div className="p-4 space-y-6 overflow-hidden">
         {/* Header */}
         <div>
           <h2 className="font-display font-semibold text-lg mb-1">Export</h2>
@@ -231,8 +640,8 @@ ${spacingVars}`;
         </div>
 
         {/* Export Tabs */}
-        <Tabs value={exportFormat} onValueChange={setExportFormat}>
-          <TabsList className="w-full grid grid-cols-3">
+        <Tabs value={exportFormat} onValueChange={setExportFormat} className="overflow-hidden min-w-0">
+          <TabsList className="w-full grid grid-cols-4">
             <TabsTrigger value="css" className="gap-1.5 text-xs">
               <FileCode className="w-4 h-4" />
               CSS
@@ -244,6 +653,10 @@ ${spacingVars}`;
             <TabsTrigger value="json" className="gap-1.5 text-xs">
               <FileJson className="w-4 h-4" />
               JSON
+            </TabsTrigger>
+            <TabsTrigger value="html" className="gap-1.5 text-xs">
+              <FileText className="w-4 h-4" />
+              HTML
             </TabsTrigger>
           </TabsList>
 
@@ -271,12 +684,26 @@ ${spacingVars}`;
 
           <TabsContent value="json" className="mt-4 space-y-4">
             <CodeBlock code={jsonCode} language="JSON" />
-            <Button 
-              className="w-full" 
+            <Button
+              className="w-full"
               onClick={() => downloadFile(jsonCode, "design-system.json")}
             >
               <Download className="w-4 h-4 mr-2" />
               Download JSON
+            </Button>
+          </TabsContent>
+
+          <TabsContent value="html" className="mt-4 space-y-4 overflow-hidden min-w-0">
+            <p className="text-sm text-muted-foreground">
+              Complete HTML demo page with embedded styles and fonts. Open in any browser.
+            </p>
+            <CodeBlock code={htmlCode} language="HTML" />
+            <Button
+              className="w-full"
+              onClick={() => downloadFile(htmlCode, "design-system-demo.html")}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download HTML Demo
             </Button>
           </TabsContent>
         </Tabs>
