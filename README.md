@@ -2,6 +2,8 @@
 
 **An all-in-one workspace for creating color palettes, typography scales, and design systems with built-in accessibility checking.**
 
+**[Try it live →](https://andiaz.github.io/chroma-type-studio/)**
+
 ## What is ChromaType Studio?
 
 ChromaType Studio is a free, web-based design tool that unifies color palette creation, typography scaling, accessibility validation, and live preview into a single workspace. It's built for designers and developers who want to create design systems without juggling multiple disconnected tools.
