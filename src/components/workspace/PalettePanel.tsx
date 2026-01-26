@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -16,8 +17,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Plus, Trash2, ChevronDown, Copy, Check, Sparkles } from "lucide-react";
-import { DesignSystem, ColorRole, ColorEntry, COLOR_PRESETS } from "@/hooks/useDesignSystem";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Plus, Trash2, ChevronDown, Copy, Check, Sparkles, Palette } from "lucide-react";
+import { DesignSystem, ColorRole, ColorEntry, COLOR_PRESETS, HarmonyType } from "@/hooks/useDesignSystem";
 import { cn } from "@/lib/utils";
 
 interface PalettePanelProps {
@@ -147,7 +153,7 @@ function ColorCard({
                     <SelectItem key={role} value={role}>
                       <div>
                         <div className="font-medium">{ROLE_LABELS[role]}</div>
-                        <div className="text-xs text-muted-foreground">{ROLE_DESCRIPTIONS[role]}</div>
+                        <div className="text-xs text-muted-foreground group-focus:text-accent-foreground/70">{ROLE_DESCRIPTIONS[role]}</div>
                       </div>
                     </SelectItem>
                   ))}
@@ -259,8 +265,45 @@ function ColorCard({
   );
 }
 
+const HARMONY_LABELS: Record<HarmonyType, string> = {
+  complementary: "Complementary",
+  analogous: "Analogous",
+  triadic: "Triadic",
+  "split-complementary": "Split Complementary",
+};
+
+const HARMONY_DESCRIPTIONS: Record<HarmonyType, string> = {
+  complementary: "Opposite hue (180°)",
+  analogous: "Adjacent hues",
+  triadic: "Three equidistant hues (120°)",
+  "split-complementary": "Adjacent to opposite",
+};
+
 export function PalettePanel({ designSystem }: PalettePanelProps) {
-  const { colors, updateColor, addColor, removeColor, applyPreset } = designSystem;
+  const {
+    colors,
+    updateColor,
+    addColor,
+    removeColor,
+    applyPreset,
+    colorScales,
+    colorScalesConfig,
+    colorScalesEnabled,
+    fullColorSystem,
+    fullSystemEnabled,
+    updateColorScalesConfig,
+    setColorScalesEnabled,
+    setFullSystemEnabled,
+  } = designSystem;
+
+  const [scalesOpen, setScalesOpen] = useState(false);
+  const [copiedShade, setCopiedShade] = useState<string | null>(null);
+
+  const copyShadeHex = (hex: string, shadeKey: string) => {
+    navigator.clipboard.writeText(hex);
+    setCopiedShade(shadeKey);
+    setTimeout(() => setCopiedShade(null), 1500);
+  };
 
   // Group colors by category
   const bgColors = colors.filter(c => c.role === "background" || c.role === "surface");
@@ -381,6 +424,237 @@ export function PalettePanel({ designSystem }: PalettePanelProps) {
         <Plus className="w-4 h-4 mr-2" />
         Add Color
       </Button>
+
+      {/* Advanced Color Scales */}
+      <Collapsible open={scalesOpen} onOpenChange={setScalesOpen}>
+        <CollapsibleTrigger asChild>
+          <button className="w-full p-3 rounded-lg border border-border hover:border-primary/30 transition-all text-left flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Palette className="w-4 h-4 text-primary" />
+              <span className="font-medium text-sm">Advanced: Color Scales</span>
+            </div>
+            <ChevronDown className={cn(
+              "w-4 h-4 text-muted-foreground transition-transform",
+              scalesOpen && "rotate-180"
+            )} />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="mt-3 p-4 rounded-lg border border-border bg-muted/30 space-y-4">
+            {/* Enable toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-medium">Enable Color Scales</Label>
+                <p className="text-xs text-muted-foreground">Generate scales for export</p>
+              </div>
+              <Switch
+                checked={colorScalesEnabled}
+                onCheckedChange={setColorScalesEnabled}
+              />
+            </div>
+
+            {colorScalesEnabled && (
+              <>
+                {/* Start from palette color */}
+                <div className="space-y-2">
+                  <Label className="text-xs">Start from Palette Color</Label>
+                  <div className="flex gap-2">
+                    {brandColors.map((color) => (
+                      <button
+                        key={color.id}
+                        onClick={() => updateColorScalesConfig({
+                          baseHue: color.hsl.h,
+                          saturation: color.hsl.s,
+                        })}
+                        className={cn(
+                          "flex-1 p-2 rounded-lg border transition-all text-left",
+                          color.hsl.h === colorScalesConfig.baseHue && color.hsl.s === colorScalesConfig.saturation
+                            ? "border-primary bg-primary/10"
+                            : "border-border hover:border-primary/50"
+                        )}
+                      >
+                        <div
+                          className="w-full h-6 rounded mb-1"
+                          style={{ backgroundColor: color.hex }}
+                        />
+                        <p className="text-[10px] text-muted-foreground truncate">{color.name}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Harmony type */}
+                <div className="space-y-2">
+                  <Label className="text-xs">Harmony Type</Label>
+                  <Select
+                    value={colorScalesConfig.type}
+                    onValueChange={(value: HarmonyType) => updateColorScalesConfig({ type: value })}
+                  >
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(HARMONY_LABELS) as HarmonyType[]).map((type) => (
+                        <SelectItem key={type} value={type}>
+                          <div>
+                            <div className="font-medium">{HARMONY_LABELS[type]}</div>
+                            <div className="text-xs text-muted-foreground group-focus:text-accent-foreground/70">{HARMONY_DESCRIPTIONS[type]}</div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Hue slider */}
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label className="text-xs">Base Hue</Label>
+                    <span className="text-xs text-muted-foreground">{colorScalesConfig.baseHue}°</span>
+                  </div>
+                  <div
+                    className="h-2 rounded-full"
+                    style={{
+                      background: "linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)"
+                    }}
+                  >
+                    <Slider
+                      value={[colorScalesConfig.baseHue]}
+                      min={0}
+                      max={360}
+                      step={1}
+                      onValueChange={([baseHue]) => updateColorScalesConfig({ baseHue })}
+                      className="h-2"
+                    />
+                  </div>
+                </div>
+
+                {/* Saturation slider */}
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label className="text-xs">Saturation</Label>
+                    <span className="text-xs text-muted-foreground">{colorScalesConfig.saturation}%</span>
+                  </div>
+                  <Slider
+                    value={[colorScalesConfig.saturation]}
+                    min={0}
+                    max={100}
+                    step={1}
+                    onValueChange={([saturation]) => updateColorScalesConfig({ saturation })}
+                    className="h-2"
+                  />
+                </div>
+
+                {/* Spacing input (for analogous and split-complementary) */}
+                {(colorScalesConfig.type === "analogous" || colorScalesConfig.type === "split-complementary") && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Label className="text-xs">Spacing</Label>
+                      <span className="text-xs text-muted-foreground">{colorScalesConfig.spacing}°</span>
+                    </div>
+                    <Slider
+                      value={[colorScalesConfig.spacing]}
+                      min={10}
+                      max={60}
+                      step={5}
+                      onValueChange={([spacing]) => updateColorScalesConfig({ spacing })}
+                      className="h-2"
+                    />
+                  </div>
+                )}
+
+                {/* Preview scales */}
+                {colorScales && (
+                  <div className="space-y-3 pt-2 border-t border-border">
+                    <Label className="text-xs text-muted-foreground">Harmony Scales</Label>
+                    {colorScales.scales.map((scale) => (
+                      <div key={scale.name} className="space-y-1">
+                        <p className="text-xs font-medium capitalize">{scale.name.replace("-", " ")}</p>
+                        <div className="flex gap-0.5">
+                          {scale.shades.map((shade) => {
+                            const shadeKey = `${scale.name}-${shade.step}`;
+                            const isCopied = copiedShade === shadeKey;
+                            return (
+                              <div
+                                key={shade.step}
+                                className="flex-1 aspect-square rounded-sm relative group cursor-pointer"
+                                style={{ backgroundColor: shade.hex }}
+                                title={`${shade.step}: ${shade.hex} (click to copy)`}
+                                onClick={() => copyShadeHex(shade.hex, shadeKey)}
+                              >
+                                <div className={cn(
+                                  "absolute inset-0 bg-black/50 rounded-sm flex items-center justify-center transition-opacity",
+                                  isCopied ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                )}>
+                                  {isCopied ? (
+                                    <Check className="w-2.5 h-2.5 text-white" />
+                                  ) : (
+                                    <span className="text-[8px] text-white font-mono">{shade.step}</span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Full semantic system toggle */}
+                <div className="flex items-center justify-between pt-3 border-t border-border">
+                  <div>
+                    <Label className="text-sm font-medium">Full Color System</Label>
+                    <p className="text-xs text-muted-foreground">Brand, Accent, Neutral, Error, Warning, Success, Info</p>
+                  </div>
+                  <Switch
+                    checked={fullSystemEnabled}
+                    onCheckedChange={setFullSystemEnabled}
+                  />
+                </div>
+
+                {/* Full system preview */}
+                {fullColorSystem && (
+                  <div className="space-y-3 pt-2">
+                    <Label className="text-xs text-muted-foreground">Full System Preview</Label>
+                    {Object.entries(fullColorSystem).map(([name, scale]) => (
+                      <div key={name} className="space-y-1">
+                        <p className="text-xs font-medium capitalize">{name}</p>
+                        <div className="flex gap-0.5">
+                          {scale.shades.map((shade) => {
+                            const shadeKey = `full-${name}-${shade.step}`;
+                            const isCopied = copiedShade === shadeKey;
+                            return (
+                              <div
+                                key={shade.step}
+                                className="flex-1 aspect-square rounded-sm relative group cursor-pointer"
+                                style={{ backgroundColor: shade.hex }}
+                                title={`${shade.step}: ${shade.hex} (click to copy)`}
+                                onClick={() => copyShadeHex(shade.hex, shadeKey)}
+                              >
+                                <div className={cn(
+                                  "absolute inset-0 bg-black/50 rounded-sm flex items-center justify-center transition-opacity",
+                                  isCopied ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                )}>
+                                  {isCopied ? (
+                                    <Check className="w-2.5 h-2.5 text-white" />
+                                  ) : (
+                                    <span className="text-[8px] text-white font-mono">{shade.step}</span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }

@@ -69,7 +69,7 @@ function CodeBlock({
 }
 
 export function ExportPanel({ designSystem }: ExportPanelProps) {
-  const { colors, typography, getContrastResults } = designSystem;
+  const { colors, typography, getContrastResults, colorScales, colorScalesEnabled, fullColorSystem, fullSystemEnabled } = designSystem;
   const [exportFormat, setExportFormat] = useState("css");
 
   const contrastResults = useMemo(() => getContrastResults(), [getContrastResults]);
@@ -100,6 +100,32 @@ export function ExportPanel({ designSystem }: ExportPanelProps) {
       `  --space-${s}: ${s}px;`
     ).join("\n");
 
+    // Generate color scale variables if enabled
+    let colorScaleVars = "";
+    if (colorScalesEnabled && colorScales) {
+      const scaleLines: string[] = [];
+      for (const scale of colorScales.scales) {
+        scaleLines.push(`  /* ${scale.name} scale */`);
+        for (const shade of scale.shades) {
+          scaleLines.push(`  --${scale.name}-${shade.step}: ${shade.hex};`);
+        }
+      }
+      colorScaleVars = `\n\n  /* Color Scales (HSLuv) */\n${scaleLines.join("\n")}`;
+    }
+
+    // Generate full color system variables if enabled
+    let fullSystemVars = "";
+    if (fullSystemEnabled && fullColorSystem) {
+      const systemLines: string[] = ["\n\n  /* Full Color System (HSLuv) */"];
+      for (const [name, scale] of Object.entries(fullColorSystem)) {
+        systemLines.push(`  /* ${name} */`);
+        for (const shade of scale.shades) {
+          systemLines.push(`  --${name}-${shade.step}: ${shade.hex};`);
+        }
+      }
+      fullSystemVars = systemLines.join("\n");
+    }
+
     return `:root {
   /* Colors */
 ${colorVars}
@@ -114,9 +140,9 @@ ${scaleVars}
 ${lineHeightVars}
 
   /* Spacing */
-${spacingVars}
+${spacingVars}${colorScaleVars}${fullSystemVars}
 }`;
-  }, [colors, typography]);
+  }, [colors, typography, colorScales, colorScalesEnabled, fullColorSystem, fullSystemEnabled]);
 
   // Generate SCSS variables
   const scssCode = useMemo(() => {
@@ -135,6 +161,34 @@ $font-body: "${typography.bodyFont}", sans-serif;`;
       `$space-${s}: ${s}px;`
     ).join("\n");
 
+    // Generate color scale variables if enabled
+    let colorScaleVars = "";
+    if (colorScalesEnabled && colorScales) {
+      const scaleLines: string[] = [];
+      for (const scale of colorScales.scales) {
+        scaleLines.push(`// ${scale.name} scale`);
+        for (const shade of scale.shades) {
+          scaleLines.push(`$${scale.name}-${shade.step}: ${shade.hex};`);
+        }
+        scaleLines.push("");
+      }
+      colorScaleVars = `\n// Color Scales (HSLuv)\n${scaleLines.join("\n")}`;
+    }
+
+    // Generate full color system variables if enabled
+    let fullSystemVars = "";
+    if (fullSystemEnabled && fullColorSystem) {
+      const systemLines: string[] = ["\n// Full Color System (HSLuv)"];
+      for (const [name, scale] of Object.entries(fullColorSystem)) {
+        systemLines.push(`// ${name}`);
+        for (const shade of scale.shades) {
+          systemLines.push(`$${name}-${shade.step}: ${shade.hex};`);
+        }
+        systemLines.push("");
+      }
+      fullSystemVars = systemLines.join("\n");
+    }
+
     return `// Colors
 ${colorVars}
 
@@ -145,12 +199,12 @@ ${fontVars}
 ${scaleVars}
 
 // Spacing
-${spacingVars}`;
-  }, [colors, typography]);
+${spacingVars}${colorScaleVars}${fullSystemVars}`;
+  }, [colors, typography, colorScales, colorScalesEnabled, fullColorSystem, fullSystemEnabled]);
 
   // Generate JSON
   const jsonCode = useMemo(() => {
-    return JSON.stringify({
+    const baseExport = {
       colors: colors.reduce((acc, c) => ({
         ...acc,
         [c.role]: {
@@ -178,8 +232,55 @@ ${spacingVars}`;
         ...acc,
         [s]: `${s}px`,
       }), {}),
-    }, null, 2);
-  }, [colors, typography]);
+    };
+
+    let result = { ...baseExport };
+
+    // Add color scales if enabled
+    if (colorScalesEnabled && colorScales) {
+      const scales = colorScales.scales.reduce((acc, scale) => ({
+        ...acc,
+        [scale.name]: {
+          baseHue: scale.baseHue,
+          saturation: scale.saturation,
+          shades: scale.shades.reduce((shadeAcc, shade) => ({
+            ...shadeAcc,
+            [shade.step]: shade.hex,
+          }), {}),
+        },
+      }), {});
+
+      result = {
+        ...result,
+        colorScales: {
+          harmonyType: colorScales.config.type,
+          scales,
+        },
+      };
+    }
+
+    // Add full color system if enabled
+    if (fullSystemEnabled && fullColorSystem) {
+      const fullSystem = Object.entries(fullColorSystem).reduce((acc, [name, scale]) => ({
+        ...acc,
+        [name]: {
+          baseHue: scale.baseHue,
+          saturation: scale.saturation,
+          shades: scale.shades.reduce((shadeAcc, shade) => ({
+            ...shadeAcc,
+            [shade.step]: shade.hex,
+          }), {}),
+        },
+      }), {});
+
+      result = {
+        ...result,
+        fullColorSystem: fullSystem,
+      };
+    }
+
+    return JSON.stringify(result, null, 2);
+  }, [colors, typography, colorScales, colorScalesEnabled, fullColorSystem, fullSystemEnabled]);
 
   // Generate complete HTML demo page
   const htmlCode = useMemo(() => {

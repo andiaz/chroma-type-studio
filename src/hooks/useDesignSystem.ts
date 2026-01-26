@@ -1,5 +1,14 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import chroma from "chroma-js";
+import {
+  ColorHarmonyConfig,
+  ColorHarmonyResult,
+  HarmonyType,
+  generateHarmony,
+  SemanticColorConfig,
+  FullColorSystem,
+  generateFullColorSystem,
+} from "./useColorScales";
 
 // Color roles for semantic organization
 export type ColorRole = 
@@ -273,12 +282,41 @@ export function calculateContrast(hex1: string, hex2: string): number {
   }
 }
 
+const DEFAULT_SCALES_CONFIG: ColorHarmonyConfig = {
+  type: "complementary",
+  baseHue: 250,
+  saturation: 80,
+  spacing: 30,
+};
+
 export function useDesignSystem() {
   const [colors, setColors] = useState<ColorEntry[]>(DEFAULT_COLORS);
   const [typography, setTypography] = useState<TypographyScale>(() => ({
     ...DEFAULT_TYPOGRAPHY,
     steps: generateTypographySteps(DEFAULT_TYPOGRAPHY.baseSize, DEFAULT_TYPOGRAPHY.scaleRatio),
   }));
+  const [colorScalesConfig, setColorScalesConfig] = useState<ColorHarmonyConfig>(DEFAULT_SCALES_CONFIG);
+  const [colorScalesEnabled, setColorScalesEnabled] = useState(false);
+  const [fullSystemEnabled, setFullSystemEnabled] = useState(false);
+
+  // Generate color harmony based on config
+  const colorScales = useMemo<ColorHarmonyResult | null>(() => {
+    if (!colorScalesEnabled) return null;
+    return generateHarmony(colorScalesConfig);
+  }, [colorScalesConfig, colorScalesEnabled]);
+
+  // Generate full semantic color system
+  const fullColorSystem = useMemo<FullColorSystem | null>(() => {
+    if (!fullSystemEnabled) return null;
+    // Get accent from complementary hue
+    const accentHue = (colorScalesConfig.baseHue + 180) % 360;
+    return generateFullColorSystem({
+      brandHue: colorScalesConfig.baseHue,
+      brandSaturation: colorScalesConfig.saturation,
+      accentHue,
+      accentSaturation: colorScalesConfig.saturation,
+    });
+  }, [colorScalesConfig, fullSystemEnabled]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -293,6 +331,9 @@ export function useDesignSystem() {
             steps: generateTypographySteps(parsed.typography.baseSize, parsed.typography.scaleRatio),
           });
         }
+        if (parsed.colorScalesConfig) setColorScalesConfig(parsed.colorScalesConfig);
+        if (parsed.colorScalesEnabled !== undefined) setColorScalesEnabled(parsed.colorScalesEnabled);
+        if (parsed.fullSystemEnabled !== undefined) setFullSystemEnabled(parsed.fullSystemEnabled);
       } catch (e) {
         console.error("Failed to parse saved design system:", e);
       }
@@ -301,8 +342,14 @@ export function useDesignSystem() {
 
   // Save to localStorage on change
   useEffect(() => {
-    localStorage.setItem("chromaType-designSystem", JSON.stringify({ colors, typography }));
-  }, [colors, typography]);
+    localStorage.setItem("chromaType-designSystem", JSON.stringify({
+      colors,
+      typography,
+      colorScalesConfig,
+      colorScalesEnabled,
+      fullSystemEnabled,
+    }));
+  }, [colors, typography, colorScalesConfig, colorScalesEnabled, fullSystemEnabled]);
 
   // Color operations
   const updateColor = useCallback((id: string, updates: Partial<Omit<ColorEntry, "id">>) => {
@@ -406,6 +453,15 @@ export function useDesignSystem() {
     return colors.find(c => c.role === role);
   }, [colors]);
 
+  // Color scales operations
+  const updateColorScalesConfig = useCallback((updates: Partial<ColorHarmonyConfig>) => {
+    setColorScalesConfig((prev) => ({ ...prev, ...updates }));
+  }, []);
+
+  const toggleColorScales = useCallback(() => {
+    setColorScalesEnabled((prev) => !prev);
+  }, []);
+
   // Reset to defaults
   const reset = useCallback(() => {
     setColors(DEFAULT_COLORS);
@@ -413,17 +469,29 @@ export function useDesignSystem() {
       ...DEFAULT_TYPOGRAPHY,
       steps: generateTypographySteps(DEFAULT_TYPOGRAPHY.baseSize, DEFAULT_TYPOGRAPHY.scaleRatio),
     });
+    setColorScalesConfig(DEFAULT_SCALES_CONFIG);
+    setColorScalesEnabled(false);
+    setFullSystemEnabled(false);
     localStorage.removeItem("chromaType-designSystem");
   }, []);
 
   return {
     colors,
     typography,
+    colorScales,
+    colorScalesConfig,
+    colorScalesEnabled,
+    fullColorSystem,
+    fullSystemEnabled,
     updateColor,
     addColor,
     removeColor,
     applyPreset,
     updateTypography,
+    updateColorScalesConfig,
+    setColorScalesEnabled,
+    setFullSystemEnabled,
+    toggleColorScales,
     getContrastResults,
     getColorByRole,
     reset,
@@ -431,3 +499,6 @@ export function useDesignSystem() {
 }
 
 export type DesignSystem = ReturnType<typeof useDesignSystem>;
+
+// Re-export color scale types for convenience
+export type { ColorHarmonyConfig, ColorHarmonyResult, HarmonyType, ColorScale, ColorShade, SemanticColorConfig, FullColorSystem } from "./useColorScales";
