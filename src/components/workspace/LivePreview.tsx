@@ -9,16 +9,17 @@ interface LivePreviewProps {
 }
 
 export function LivePreview({ designSystem }: LivePreviewProps) {
-  const { colors, typography, getColorByRole } = designSystem;
+  const { previewColors, typography } = designSystem;
 
   const styles = useMemo(() => {
-    const bg = getColorByRole("background");
-    const surface = getColorByRole("surface");
-    const text = getColorByRole("text");
-    const textMuted = getColorByRole("textMuted");
-    const primary = getColorByRole("primary");
-    const secondary = getColorByRole("secondary");
-    const accent = getColorByRole("accent");
+    const getColor = (role: string) => previewColors.find(c => c.role === role);
+    const bg = getColor("background");
+    const surface = getColor("surface");
+    const text = getColor("text");
+    const textMuted = getColor("textMuted");
+    const primary = getColor("primary");
+    const secondary = getColor("secondary");
+    const accent = getColor("accent");
 
     return {
       background: bg?.hex || "#FAFAF9",
@@ -33,7 +34,7 @@ export function LivePreview({ designSystem }: LivePreviewProps) {
       baseSize: typography.baseSize,
       steps: typography.steps,
     };
-  }, [colors, typography, getColorByRole]);
+  }, [previewColors, typography]);
 
   // Load fonts dynamically so preview shows correct fonts immediately
   useEffect(() => {

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -20,10 +21,12 @@ import {
   RotateCcw,
   Paintbrush,
   Eye,
+  Glasses,
 } from 'lucide-react';
 import { PalettePanel } from '@/components/workspace/PalettePanel';
 import { TypographyPanel } from '@/components/workspace/TypographyPanel';
 import { AccessibilityPanel } from '@/components/workspace/AccessibilityPanel';
+import { ColorBlindnessPanel } from '@/components/workspace/ColorBlindnessPanel';
 import { ExportPanel } from '@/components/workspace/ExportPanel';
 import { LivePreview } from '@/components/workspace/LivePreview';
 import { useDesignSystem } from '@/hooks/useDesignSystem';
@@ -38,6 +41,15 @@ export default function Workspace() {
     'controls',
   );
   const designSystem = useDesignSystem();
+  const hasShownUrlToast = useRef(false);
+
+  // Show notification when loaded from shared URL
+  useEffect(() => {
+    if (designSystem.loadedFromUrl && !hasShownUrlToast.current) {
+      hasShownUrlToast.current = true;
+      toast.success('Design system loaded from shared link');
+    }
+  }, [designSystem.loadedFromUrl]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -156,7 +168,7 @@ export default function Workspace() {
                     className="flex-1 flex flex-col min-h-0"
                   >
                     <div className="border-b border-border px-4 pt-3 pb-0 flex-shrink-0">
-                      <TabsList className="w-full grid grid-cols-4 h-10">
+                      <TabsList className="w-full grid grid-cols-5 h-10">
                         <TabsTrigger
                           value="palette"
                           className="gap-1.5 text-xs"
@@ -174,6 +186,12 @@ export default function Workspace() {
                           className="gap-1.5 text-xs"
                         >
                           <CheckCircle2 className="w-4 h-4" />
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="colorblind"
+                          className="gap-1.5 text-xs"
+                        >
+                          <Glasses className="w-4 h-4" />
                         </TabsTrigger>
                         <TabsTrigger value="export" className="gap-1.5 text-xs">
                           <Download className="w-4 h-4" />
@@ -199,6 +217,12 @@ export default function Workspace() {
                         className="h-full m-0 overflow-y-auto"
                       >
                         <AccessibilityPanel designSystem={designSystem} />
+                      </TabsContent>
+                      <TabsContent
+                        value="colorblind"
+                        className="h-full m-0 overflow-y-auto"
+                      >
+                        <ColorBlindnessPanel designSystem={designSystem} />
                       </TabsContent>
                       <TabsContent
                         value="export"
@@ -263,7 +287,7 @@ export default function Workspace() {
                 className="flex-1 flex flex-col min-h-0"
               >
                 <div className="border-b border-border px-4 pt-3 pb-0 flex-shrink-0">
-                  <TabsList className="w-full grid grid-cols-4 h-10">
+                  <TabsList className="w-full grid grid-cols-5 h-10">
                     <TabsTrigger value="palette" className="gap-1.5 text-xs">
                       <Palette className="w-4 h-4" />
                       <span className="hidden lg:inline">Palette</span>
@@ -278,6 +302,10 @@ export default function Workspace() {
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       <span className="hidden lg:inline">A11y</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="colorblind" className="gap-1.5 text-xs">
+                      <Glasses className="w-4 h-4" />
+                      <span className="hidden lg:inline">Vision</span>
                     </TabsTrigger>
                     <TabsTrigger value="export" className="gap-1.5 text-xs">
                       <Download className="w-4 h-4" />
@@ -304,6 +332,12 @@ export default function Workspace() {
                     className="h-full m-0 overflow-y-auto"
                   >
                     <AccessibilityPanel designSystem={designSystem} />
+                  </TabsContent>
+                  <TabsContent
+                    value="colorblind"
+                    className="h-full m-0 overflow-y-auto"
+                  >
+                    <ColorBlindnessPanel designSystem={designSystem} />
                   </TabsContent>
                   <TabsContent
                     value="export"

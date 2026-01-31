@@ -12,7 +12,9 @@ import {
   AlertTriangle,
   FileCode,
   FileJson,
-  FileText
+  FileText,
+  Wind,
+  Link2
 } from "lucide-react";
 import { DesignSystem } from "@/hooks/useDesignSystem";
 import { cn } from "@/lib/utils";
@@ -69,8 +71,16 @@ function CodeBlock({
 }
 
 export function ExportPanel({ designSystem }: ExportPanelProps) {
-  const { colors, typography, getContrastResults, colorScales, colorScalesEnabled, fullColorSystem, fullSystemEnabled } = designSystem;
+  const { colors, typography, getContrastResults, colorScales, colorScalesEnabled, fullColorSystem, fullSystemEnabled, getShareUrl } = designSystem;
   const [exportFormat, setExportFormat] = useState("css");
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const copyShareLink = () => {
+    const url = getShareUrl();
+    navigator.clipboard.writeText(url);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
 
   const contrastResults = useMemo(() => getContrastResults(), [getContrastResults]);
   const failingCount = contrastResults.filter(r => !r.aa).length;
@@ -688,6 +698,75 @@ ${cssCode}
 </html>`;
   }, [colors, typography, cssCode]);
 
+  // Generate Tailwind config
+  const tailwindConfig = useMemo(() => {
+    const colorEntries = colors.map(c =>
+      `        '${c.role}': '${c.hex}',`
+    ).join("\n");
+
+    const fontSizeEntries = typography.steps.map(s =>
+      `        '${s.name}': ['${s.size.toFixed(2)}px', { lineHeight: '${s.lineHeight}' }],`
+    ).join("\n");
+
+    // Generate color scale entries if enabled
+    let colorScaleEntries = "";
+    if (colorScalesEnabled && colorScales) {
+      const scaleLines: string[] = [];
+      for (const scale of colorScales.scales) {
+        scaleLines.push(`        '${scale.name}': {`);
+        for (const shade of scale.shades) {
+          scaleLines.push(`          '${shade.step}': '${shade.hex}',`);
+        }
+        scaleLines.push(`        },`);
+      }
+      colorScaleEntries = scaleLines.join("\n");
+    }
+
+    // Generate full color system entries if enabled
+    let fullSystemEntries = "";
+    if (fullSystemEnabled && fullColorSystem) {
+      const systemLines: string[] = [];
+      for (const [name, scale] of Object.entries(fullColorSystem)) {
+        systemLines.push(`        '${name}': {`);
+        for (const shade of scale.shades) {
+          systemLines.push(`          '${shade.step}': '${shade.hex}',`);
+        }
+        systemLines.push(`        },`);
+      }
+      fullSystemEntries = systemLines.join("\n");
+    }
+
+    const allColorEntries = [colorEntries, colorScaleEntries, fullSystemEntries]
+      .filter(Boolean)
+      .join("\n");
+
+    return `/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+${allColorEntries}
+      },
+      fontFamily: {
+        'heading': ['${typography.headingFont}', 'sans-serif'],
+        'body': ['${typography.bodyFont}', 'sans-serif'],
+      },
+      fontSize: {
+${fontSizeEntries}
+      },
+      spacing: {
+${spacingScale.map(s => `        '${s}': '${s}px',`).join("\n")}
+      },
+    },
+  },
+  plugins: [],
+};`;
+  }, [colors, typography, colorScales, colorScalesEnabled, fullColorSystem, fullSystemEnabled]);
+
   const downloadFile = (content: string, filename: string) => {
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
@@ -709,40 +788,37 @@ ${cssCode}
           </p>
         </div>
 
-        {/* Status */}
-        <div className={cn(
-          "p-4 rounded-lg border flex items-start gap-3",
-          hasIssues 
-            ? "bg-warning/10 border-warning/30" 
-            : "bg-success/10 border-success/30"
-        )}>
-          {hasIssues ? (
-            <>
-              <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0" />
-              <div>
-                <p className="font-medium text-warning-foreground">Accessibility Issues</p>
-                <p className="text-sm text-warning-foreground/90">
-                  {failingCount} color combination{failingCount !== 1 ? "s" : ""} fail WCAG requirements.
-                  Review the A11y tab before exporting.
-                </p>
-              </div>
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
-              <div>
-                <p className="font-medium text-success-foreground">Ready to Export</p>
-                <p className="text-sm text-success-foreground/90">
-                  All color combinations meet WCAG AA standards.
-                </p>
-              </div>
-            </>
+        {/* Quick Actions */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant={linkCopied ? "default" : "outline"}
+            size="sm"
+            className="gap-1.5"
+            onClick={copyShareLink}
+          >
+            {linkCopied ? (
+              <>
+                <Check className="w-4 h-4" />
+                Link Copied!
+              </>
+            ) : (
+              <>
+                <Link2 className="w-4 h-4" />
+                Share Link
+              </>
+            )}
+          </Button>
+          {hasIssues && (
+            <span className="text-xs text-warning flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              {failingCount} contrast issue{failingCount !== 1 ? "s" : ""}
+            </span>
           )}
         </div>
 
         {/* Export Tabs */}
         <Tabs value={exportFormat} onValueChange={setExportFormat} className="overflow-hidden min-w-0">
-          <TabsList className="w-full grid grid-cols-4">
+          <TabsList className="w-full grid grid-cols-5">
             <TabsTrigger value="css" className="gap-1.5 text-xs">
               <FileCode className="w-4 h-4" />
               CSS
@@ -754,6 +830,10 @@ ${cssCode}
             <TabsTrigger value="json" className="gap-1.5 text-xs">
               <FileJson className="w-4 h-4" />
               JSON
+            </TabsTrigger>
+            <TabsTrigger value="tailwind" className="gap-1.5 text-xs">
+              <Wind className="w-4 h-4" />
+              Tailwind
             </TabsTrigger>
             <TabsTrigger value="html" className="gap-1.5 text-xs">
               <FileText className="w-4 h-4" />
@@ -791,6 +871,20 @@ ${cssCode}
             >
               <Download className="w-4 h-4 mr-2" />
               Download JSON
+            </Button>
+          </TabsContent>
+
+          <TabsContent value="tailwind" className="mt-4 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Tailwind CSS configuration file. Add to your project's <code className="px-1 py-0.5 bg-muted rounded text-xs">tailwind.config.js</code>
+            </p>
+            <CodeBlock code={tailwindConfig} language="tailwind.config.js" />
+            <Button
+              className="w-full"
+              onClick={() => downloadFile(tailwindConfig, "tailwind.config.js")}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download Tailwind Config
             </Button>
           </TabsContent>
 

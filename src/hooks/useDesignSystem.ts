@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import chroma from "chroma-js";
 import {
   ColorHarmonyConfig,
@@ -9,6 +9,16 @@ import {
   FullColorSystem,
   generateFullColorSystem,
 } from "./useColorScales";
+import {
+  getStateFromUrl,
+  generateShareUrl,
+  clearUrlHash,
+  type ShareableState,
+} from "@/lib/urlStateEncoder";
+import {
+  simulateColorBlindness,
+  type VisionType,
+} from "@/lib/colorBlindness";
 
 // Color roles for semantic organization
 export type ColorRole = 
@@ -289,6 +299,105 @@ const DEFAULT_SCALES_CONFIG: ColorHarmonyConfig = {
   spacing: 30,
 };
 
+export type ColorMode = "light" | "dark";
+
+/**
+ * Check if a palette is already dark (background lightness < 30)
+ */
+function isPaletteDark(colors: ColorEntry[]): boolean {
+  const bg = colors.find(c => c.role === "background");
+  return bg ? bg.hsl.l < 30 : false;
+}
+
+/**
+ * Generate a dark mode palette from light mode colors
+ * Uses perceptual inversion that maintains contrast relationships
+ */
+function generateDarkPalette(lightColors: ColorEntry[]): ColorEntry[] {
+  // If the palette is already dark, generate a light version instead
+  const alreadyDark = isPaletteDark(lightColors);
+
+  return lightColors.map(color => {
+    const hsl = color.hsl;
+    let newL: number;
+    let newS = hsl.s;
+
+    if (alreadyDark) {
+      // Palette is already dark, generate light version
+      switch (color.role) {
+        case "background":
+          newL = 98;
+          newS = Math.min(hsl.s, 5);
+          break;
+        case "surface":
+          newL = 100;
+          newS = 0;
+          break;
+        case "text":
+          newL = 10;
+          newS = Math.min(hsl.s, 10);
+          break;
+        case "textMuted":
+          newL = 40;
+          newS = Math.min(hsl.s, 10);
+          break;
+        case "primary":
+        case "secondary":
+        case "accent":
+          // For brand colors, adjust to work on light background
+          newL = Math.max(35, Math.min(55, hsl.l));
+          newS = Math.min(hsl.s, 85);
+          break;
+        default:
+          newL = 100 - hsl.l;
+      }
+    } else {
+      // Normal light to dark conversion
+      switch (color.role) {
+        case "background":
+          newL = 8;
+          newS = Math.min(hsl.s, 15);
+          break;
+        case "surface":
+          newL = 12;
+          newS = Math.min(hsl.s, 20);
+          break;
+        case "text":
+          newL = 95;
+          newS = Math.min(hsl.s, 5);
+          break;
+        case "textMuted":
+          newL = 65;
+          newS = Math.min(hsl.s, 10);
+          break;
+        case "primary":
+        case "secondary":
+        case "accent":
+          // Brand colors: slightly lighter for dark mode visibility
+          // Keep the hue, adjust lightness to be visible on dark bg
+          if (hsl.l < 40) {
+            newL = hsl.l + 25;
+          } else if (hsl.l > 70) {
+            newL = hsl.l - 15;
+          } else {
+            newL = Math.min(65, hsl.l + 10);
+          }
+          newS = Math.min(hsl.s, 80);
+          break;
+        default:
+          newL = 100 - hsl.l;
+      }
+    }
+
+    const newHex = hslToHex(hsl.h, newS, newL);
+    return {
+      ...color,
+      hex: newHex,
+      hsl: { h: hsl.h, s: newS, l: newL },
+    };
+  });
+}
+
 export function useDesignSystem() {
   const [colors, setColors] = useState<ColorEntry[]>(DEFAULT_COLORS);
   const [typography, setTypography] = useState<TypographyScale>(() => ({
@@ -298,6 +407,12 @@ export function useDesignSystem() {
   const [colorScalesConfig, setColorScalesConfig] = useState<ColorHarmonyConfig>(DEFAULT_SCALES_CONFIG);
   const [colorScalesEnabled, setColorScalesEnabled] = useState(false);
   const [fullSystemEnabled, setFullSystemEnabled] = useState(false);
+  const [loadedFromUrl, setLoadedFromUrl] = useState(false);
+  const [colorMode, setColorMode] = useState<ColorMode>("light");
+  const [darkColors, setDarkColors] = useState<ColorEntry[] | null>(null);
+  const [autoSyncDark, setAutoSyncDark] = useState(true);
+  const [visionSimulation, setVisionSimulation] = useState<VisionType>("normal");
+  const isInitialized = useRef(false);
 
   // Generate color harmony based on config
   const colorScales = useMemo<ColorHarmonyResult | null>(() => {
@@ -318,8 +433,58 @@ export function useDesignSystem() {
     });
   }, [colorScalesConfig, fullSystemEnabled]);
 
-  // Load from localStorage on mount
+  // Auto-generate dark colors when light colors change and autoSyncDark is enabled
+  const computedDarkColors = useMemo(() => {
+    if (autoSyncDark) {
+      return generateDarkPalette(colors);
+    }
+    return darkColors;
+  }, [colors, autoSyncDark, darkColors]);
+
+  // Get the current colors based on mode
+  const currentColors = useMemo(() => {
+    if (colorMode === "dark" && computedDarkColors) {
+      return computedDarkColors;
+    }
+    return colors;
+  }, [colorMode, colors, computedDarkColors]);
+
+  // Apply vision simulation to current colors for preview
+  const previewColors = useMemo(() => {
+    if (visionSimulation === "normal") {
+      return currentColors;
+    }
+    return currentColors.map(color => ({
+      ...color,
+      hex: simulateColorBlindness(color.hex, visionSimulation),
+    }));
+  }, [currentColors, visionSimulation]);
+
+  // Load from URL hash first, then localStorage on mount
   useEffect(() => {
+    if (isInitialized.current) return;
+    isInitialized.current = true;
+
+    // Priority 1: Check URL hash for shared state
+    const urlState = getStateFromUrl();
+    if (urlState) {
+      if (urlState.colors) setColors(urlState.colors);
+      if (urlState.typography) {
+        setTypography({
+          ...urlState.typography,
+          steps: generateTypographySteps(urlState.typography.baseSize, urlState.typography.scaleRatio),
+        });
+      }
+      if (urlState.colorScalesConfig) setColorScalesConfig(urlState.colorScalesConfig);
+      if (urlState.colorScalesEnabled !== undefined) setColorScalesEnabled(urlState.colorScalesEnabled);
+      if (urlState.fullSystemEnabled !== undefined) setFullSystemEnabled(urlState.fullSystemEnabled);
+      setLoadedFromUrl(true);
+      // Clear the hash after loading so it doesn't persist in the URL
+      clearUrlHash();
+      return;
+    }
+
+    // Priority 2: Check localStorage
     const saved = localStorage.getItem("chromaType-designSystem");
     if (saved) {
       try {
@@ -475,25 +640,98 @@ export function useDesignSystem() {
     localStorage.removeItem("chromaType-designSystem");
   }, []);
 
+  // Generate shareable URL
+  const getShareUrl = useCallback((): string => {
+    const state: ShareableState = {
+      colors,
+      typography,
+      colorScalesConfig,
+      colorScalesEnabled,
+      fullSystemEnabled,
+    };
+    return generateShareUrl(state);
+  }, [colors, typography, colorScalesConfig, colorScalesEnabled, fullSystemEnabled]);
+
+  // Dark mode operations
+  const toggleColorMode = useCallback(() => {
+    setColorMode(prev => prev === "light" ? "dark" : "light");
+  }, []);
+
+  const regenerateDarkPalette = useCallback(() => {
+    setDarkColors(generateDarkPalette(colors));
+  }, [colors]);
+
+  const toggleAutoSyncDark = useCallback(() => {
+    setAutoSyncDark(prev => !prev);
+  }, []);
+
+  // Update dark colors manually (when autoSyncDark is false)
+  const updateDarkColor = useCallback((id: string, updates: Partial<Omit<ColorEntry, "id">>) => {
+    if (!darkColors) return;
+    setDarkColors(prev => {
+      if (!prev) return prev;
+      return prev.map(color => {
+        if (color.id !== id) return color;
+
+        let newColor = { ...color, ...updates };
+
+        // Sync hex <-> hsl
+        if (updates.hex && !updates.hsl) {
+          newColor.hsl = hexToHsl(updates.hex);
+        } else if (updates.hsl && !updates.hex) {
+          newColor.hex = hslToHex(updates.hsl.h, updates.hsl.s, updates.hsl.l);
+        }
+
+        return newColor;
+      });
+    });
+  }, [darkColors]);
+
   return {
+    // Light mode colors (source of truth)
     colors,
+    // Current colors based on mode (light or dark)
+    currentColors,
+    // Preview colors with vision simulation applied
+    previewColors,
+    // Dark mode colors (auto-generated or manually edited)
+    darkColors: computedDarkColors,
+    // Color mode state
+    colorMode,
+    autoSyncDark,
+    // Vision simulation
+    visionSimulation,
+    setVisionSimulation,
+    // Typography and color scales
     typography,
     colorScales,
     colorScalesConfig,
     colorScalesEnabled,
     fullColorSystem,
     fullSystemEnabled,
+    loadedFromUrl,
+    // Color operations (light mode)
     updateColor,
     addColor,
     removeColor,
     applyPreset,
+    // Dark mode operations
+    updateDarkColor,
+    toggleColorMode,
+    regenerateDarkPalette,
+    toggleAutoSyncDark,
+    setColorMode,
+    // Typography operations
     updateTypography,
+    // Color scales operations
     updateColorScalesConfig,
     setColorScalesEnabled,
     setFullSystemEnabled,
     toggleColorScales,
+    // Utilities
     getContrastResults,
     getColorByRole,
+    getShareUrl,
     reset,
   };
 }

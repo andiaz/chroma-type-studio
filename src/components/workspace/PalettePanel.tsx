@@ -22,8 +22,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Plus, Trash2, ChevronDown, Copy, Check, Sparkles, Palette } from "lucide-react";
-import { DesignSystem, ColorRole, ColorEntry, COLOR_PRESETS, HarmonyType } from "@/hooks/useDesignSystem";
+import { Plus, Trash2, ChevronDown, Copy, Check, Sparkles, Palette, Sun, Moon } from "lucide-react";
+import { DesignSystem, ColorRole, ColorEntry, COLOR_PRESETS, HarmonyType, ColorMode } from "@/hooks/useDesignSystem";
+import { ImageExtractor } from "./ImageExtractor";
 import { cn } from "@/lib/utils";
 
 interface PalettePanelProps {
@@ -282,10 +283,18 @@ const HARMONY_DESCRIPTIONS: Record<HarmonyType, string> = {
 export function PalettePanel({ designSystem }: PalettePanelProps) {
   const {
     colors,
+    currentColors,
+    darkColors,
+    colorMode,
+    autoSyncDark,
     updateColor,
+    updateDarkColor,
     addColor,
     removeColor,
     applyPreset,
+    toggleColorMode,
+    regenerateDarkPalette,
+    toggleAutoSyncDark,
     colorScales,
     colorScalesConfig,
     colorScalesEnabled,
@@ -305,12 +314,22 @@ export function PalettePanel({ designSystem }: PalettePanelProps) {
     setTimeout(() => setCopiedShade(null), 1500);
   };
 
-  // Group colors by category
-  const bgColors = colors.filter(c => c.role === "background" || c.role === "surface");
-  const textColors = colors.filter(c => c.role === "text" || c.role === "textMuted");
-  const brandColors = colors.filter(c => 
+  // Group colors by category (use currentColors which reflects the active mode)
+  const displayColors = currentColors;
+  const bgColors = displayColors.filter(c => c.role === "background" || c.role === "surface");
+  const textColors = displayColors.filter(c => c.role === "text" || c.role === "textMuted");
+  const brandColors = displayColors.filter(c =>
     c.role === "primary" || c.role === "secondary" || c.role === "accent"
   );
+
+  // Use the appropriate update function based on mode
+  const handleColorUpdate = (id: string, updates: Partial<Omit<ColorEntry, "id">>) => {
+    if (colorMode === "dark" && !autoSyncDark) {
+      updateDarkColor(id, updates);
+    } else {
+      updateColor(id, updates);
+    }
+  };
 
   return (
     <div className="p-4 space-y-6">
@@ -353,6 +372,76 @@ export function PalettePanel({ designSystem }: PalettePanelProps) {
             </button>
           ))}
         </div>
+
+        {/* Image Color Extraction */}
+        <ImageExtractor
+          colors={colors}
+          onApply={(newColors) => {
+            newColors.forEach((color) => {
+              updateColor(color.id, { hex: color.hex, hsl: color.hsl });
+            });
+          }}
+        />
+      </div>
+
+      {/* Dark/Light Mode Toggle */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {colorMode === "light" ? (
+              <Sun className="w-4 h-4 text-amber-500" />
+            ) : (
+              <Moon className="w-4 h-4 text-indigo-400" />
+            )}
+            <h3 className="text-sm font-medium">Color Mode</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={colorMode === "light" ? "secondary" : "ghost"}
+              size="sm"
+              className="h-8 px-3"
+              onClick={() => colorMode !== "light" && toggleColorMode()}
+            >
+              <Sun className="w-4 h-4 mr-1" />
+              Light
+            </Button>
+            <Button
+              variant={colorMode === "dark" ? "secondary" : "ghost"}
+              size="sm"
+              className="h-8 px-3"
+              onClick={() => colorMode !== "dark" && toggleColorMode()}
+            >
+              <Moon className="w-4 h-4 mr-1" />
+              Dark
+            </Button>
+          </div>
+        </div>
+        {colorMode === "dark" && (
+          <div className="p-3 rounded-lg border border-border bg-muted/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Auto-sync with Light</p>
+                <p className="text-xs text-muted-foreground">
+                  Automatically generate dark palette from light colors
+                </p>
+              </div>
+              <Switch
+                checked={autoSyncDark}
+                onCheckedChange={toggleAutoSyncDark}
+              />
+            </div>
+            {!autoSyncDark && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={regenerateDarkPalette}
+              >
+                Regenerate Dark Palette
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Background Colors */}
@@ -366,7 +455,7 @@ export function PalettePanel({ designSystem }: PalettePanelProps) {
               <ColorCard
                 key={color.id}
                 color={color}
-                onUpdate={(updates) => updateColor(color.id, updates)}
+                onUpdate={(updates) => handleColorUpdate(color.id, updates)}
                 onRemove={() => removeColor(color.id)}
                 canRemove={bgColors.length > 1}
               />
@@ -386,7 +475,7 @@ export function PalettePanel({ designSystem }: PalettePanelProps) {
               <ColorCard
                 key={color.id}
                 color={color}
-                onUpdate={(updates) => updateColor(color.id, updates)}
+                onUpdate={(updates) => handleColorUpdate(color.id, updates)}
                 onRemove={() => removeColor(color.id)}
                 canRemove={textColors.length > 1}
               />
@@ -406,7 +495,7 @@ export function PalettePanel({ designSystem }: PalettePanelProps) {
               <ColorCard
                 key={color.id}
                 color={color}
-                onUpdate={(updates) => updateColor(color.id, updates)}
+                onUpdate={(updates) => handleColorUpdate(color.id, updates)}
                 onRemove={() => removeColor(color.id)}
                 canRemove={brandColors.length > 1}
               />
