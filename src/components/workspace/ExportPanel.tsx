@@ -386,7 +386,7 @@ ${cssCode}
       display: inline-flex;
       align-items: center;
       gap: var(--space-8);
-      padding: var(--space-8) var(--space-16);
+      padding: 12px 24px;
       border-radius: 8px;
       font-weight: 500;
       font-size: var(--text-sm);
@@ -409,6 +409,10 @@ ${cssCode}
       background: transparent;
       border: 1px solid ${text}20;
       color: var(--color-text);
+    }
+
+    .btn-header {
+      padding: 8px 16px;
     }
 
     /* Hero */
@@ -574,10 +578,8 @@ ${cssCode}
       margin-bottom: var(--space-8);
     }
 
-    .pricing-features li::before {
-      content: "✓";
-      color: var(--color-accent);
-      font-weight: 600;
+    .pricing-features li svg {
+      flex-shrink: 0;
     }
 
     .pricing-card .btn {
@@ -626,7 +628,7 @@ ${cssCode}
       <nav class="nav">
         <a href="#">Features</a>
         <a href="#">Pricing</a>
-        <button class="btn btn-primary">Get Started</button>
+        <button class="btn btn-primary btn-header">Get Started</button>
       </nav>
     </div>
   </header>
@@ -637,7 +639,7 @@ ${cssCode}
     <h1>Build something<br><span>amazing</span> today</h1>
     <p>The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
     <div class="hero-buttons">
-      <button class="btn btn-primary">Get Started →</button>
+      <button class="btn btn-primary">Get Started <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
       <button class="btn btn-outline">Learn More</button>
     </div>
   </section>
@@ -648,17 +650,23 @@ ${cssCode}
       <h2>Features</h2>
       <div class="features-grid">
         <div class="feature-card">
-          <div class="feature-icon" style="background-color: ${primary}20; color: ${primary};">⚡</div>
+          <div class="feature-icon" style="background-color: ${primary}20;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${primary}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
           <h3>Fast</h3>
           <p>Lightning quick performance</p>
         </div>
         <div class="feature-card">
-          <div class="feature-icon" style="background-color: ${secondary}20; color: ${secondary};">🔒</div>
+          <div class="feature-icon" style="background-color: ${secondary}20;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${secondary}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
           <h3>Secure</h3>
           <p>Enterprise-grade security</p>
         </div>
         <div class="feature-card">
-          <div class="feature-icon" style="background-color: ${accent}20; color: ${accent};">✨</div>
+          <div class="feature-icon" style="background-color: ${accent}20;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${accent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
           <h3>Simple</h3>
           <p>Easy to get started</p>
         </div>
@@ -676,9 +684,9 @@ ${cssCode}
         <span class="period">/month</span>
       </div>
       <ul class="pricing-features">
-        <li>Unlimited projects</li>
-        <li>Priority support</li>
-        <li>Advanced analytics</li>
+        <li><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${accent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Unlimited projects</li>
+        <li><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${accent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Priority support</li>
+        <li><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${accent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Advanced analytics</li>
       </ul>
       <button class="btn btn-primary">Subscribe</button>
     </div>

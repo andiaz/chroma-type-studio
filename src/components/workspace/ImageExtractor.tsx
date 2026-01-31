@@ -92,11 +92,14 @@ export function ImageExtractor({ colors, onApply }: ImageExtractorProps) {
     return (
       <Button
         variant="outline"
-        className="w-full gap-2"
+        className="w-full gap-2 justify-start"
         onClick={() => setIsOpen(true)}
       >
         <ImageIcon className="w-4 h-4" />
-        Extract from Image URL
+        <span className="flex-1 text-left">Extract from Image URL</span>
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 font-medium">
+          Beta
+        </span>
       </Button>
     );
   }
@@ -112,6 +115,9 @@ export function ImageExtractor({ colors, onApply }: ImageExtractorProps) {
         <div className="flex items-center gap-2">
           <ImageIcon className="w-4 h-4 text-primary" />
           <h4 className="font-medium text-sm">Extract from Image</h4>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 font-medium">
+            Experimental
+          </span>
         </div>
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleReset}>
           <X className="w-4 h-4" />
@@ -145,7 +151,7 @@ export function ImageExtractor({ colors, onApply }: ImageExtractorProps) {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Enter a publicly accessible image URL (must support CORS)
+          Enter a publicly accessible image URL (must support CORS). Results are a starting point — colors may need manual tweaking.
         </p>
         {error && (
           <p className="text-xs text-destructive">{error}</p>
