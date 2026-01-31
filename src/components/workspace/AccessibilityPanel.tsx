@@ -136,9 +136,9 @@ export function AccessibilityPanel({ designSystem }: AccessibilityPanelProps) {
       <div className="p-4 space-y-6">
         {/* Header */}
         <div>
-          <h2 className="font-display font-semibold text-lg mb-1">Accessibility</h2>
+          <h2 className="font-display font-semibold text-lg mb-1">Accessibility (a11y)</h2>
           <p className="text-sm text-muted-foreground">
-            WCAG contrast ratio checks for your color pairs.
+            Check if your colors meet WCAG contrast requirements for readable, inclusive design.
           </p>
         </div>
 
@@ -161,12 +161,33 @@ export function AccessibilityPanel({ designSystem }: AccessibilityPanelProps) {
         {/* Info box */}
         <div className="flex gap-3 p-3 rounded-lg bg-muted/50 border border-border">
           <Info className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-          <div className="text-xs text-muted-foreground">
-            <p className="font-medium text-foreground mb-1">WCAG Standards</p>
-            <ul className="space-y-0.5">
-              <li><strong>AA:</strong> 4.5:1 for normal text, 3:1 for large text</li>
-              <li><strong>AAA:</strong> 7:1 for normal text, 4.5:1 for large text</li>
-            </ul>
+          <div className="text-xs text-muted-foreground space-y-2">
+            <div>
+              <p className="font-medium text-foreground mb-1">What is a11y?</p>
+              <p>
+                "a11y" is short for "accessibility" (a + 11 letters + y). It refers to designing products that everyone can use, including people with visual impairments.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-foreground mb-1">What is WCAG?</p>
+              <p>
+                WCAG (Web Content Accessibility Guidelines) are international standards for making web content accessible. They define minimum contrast ratios between text and backgrounds:
+              </p>
+              <ul className="mt-1 space-y-0.5 ml-3">
+                <li><strong>AA:</strong> 4.5:1 for normal text, 3:1 for large text</li>
+                <li><strong>AAA:</strong> 7:1 for normal text, 4.5:1 for large text</li>
+              </ul>
+            </div>
+            <p>
+              <a
+                href="https://www.w3.org/WAI/WCAG21/quickref/#contrast-minimum"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                Learn more about WCAG →
+              </a>
+            </p>
           </div>
         </div>
 
