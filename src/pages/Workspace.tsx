@@ -8,6 +8,7 @@ import {
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Palette,
@@ -85,7 +86,17 @@ export default function Workspace() {
         </div>
 
         {/* Preview size controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground hidden sm:inline">Logo:</span>
+            <Input
+              value={designSystem.logoText}
+              onChange={(e) => designSystem.setLogoText(e.target.value)}
+              className="h-8 w-28 text-sm"
+              placeholder="Brand name"
+            />
+          </div>
+          <div className="h-6 w-px bg-border hidden sm:block" />
           <div className="flex items-center gap-1 p-1 rounded-lg bg-muted">
             <Button
               variant={previewSize === 'desktop' ? 'secondary' : 'ghost'}

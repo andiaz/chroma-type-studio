@@ -9,7 +9,7 @@ interface LivePreviewProps {
 }
 
 export function LivePreview({ designSystem }: LivePreviewProps) {
-  const { previewColors, typography } = designSystem;
+  const { previewColors, typography, logoText } = designSystem;
 
   const styles = useMemo(() => {
     const getColor = (role: string) => previewColors.find(c => c.role === role);
@@ -82,15 +82,15 @@ export function LivePreview({ designSystem }: LivePreviewProps) {
         }}
       >
         <div className="flex items-center justify-between">
-          <div 
+          <div
             className="font-semibold"
-            style={{ 
+            style={{
               fontFamily: styles.headingFont,
               fontSize: getSize("lg"),
               color: styles.primary,
             }}
           >
-            Brand
+            {logoText}
           </div>
           <nav className="flex items-center gap-6">
             <a 
@@ -316,7 +316,7 @@ export function LivePreview({ designSystem }: LivePreviewProps) {
         }}
       >
         <div className="flex items-center justify-between">
-          <p>© 2025 Brand. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {logoText}. All rights reserved.</p>
           <div className="flex gap-4">
             <a href="#" className="hover:opacity-70 transition-opacity">Privacy</a>
             <a href="#" className="hover:opacity-70 transition-opacity">Terms</a>

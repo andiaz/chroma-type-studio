@@ -71,7 +71,7 @@ function CodeBlock({
 }
 
 export function ExportPanel({ designSystem }: ExportPanelProps) {
-  const { colors, typography, getContrastResults, colorScales, colorScalesEnabled, fullColorSystem, fullSystemEnabled, getShareUrl } = designSystem;
+  const { colors, typography, getContrastResults, colorScales, colorScalesEnabled, fullColorSystem, fullSystemEnabled, getShareUrl, logoText } = designSystem;
   const [exportFormat, setExportFormat] = useState("css");
   const [linkCopied, setLinkCopied] = useState(false);
 
@@ -624,7 +624,7 @@ ${cssCode}
   <!-- Header -->
   <header class="header">
     <div class="header-inner">
-      <div class="logo">Brand</div>
+      <div class="logo">${logoText}</div>
       <nav class="nav">
         <a href="#">Features</a>
         <a href="#">Pricing</a>
@@ -695,7 +695,7 @@ ${cssCode}
   <!-- Footer -->
   <footer class="footer">
     <div class="footer-inner">
-      <p>© 2025 Brand. All rights reserved.</p>
+      <p>© ${new Date().getFullYear()} ${logoText}. All rights reserved.</p>
       <div class="footer-links">
         <a href="#">Privacy</a>
         <a href="#">Terms</a>
@@ -704,7 +704,7 @@ ${cssCode}
   </footer>
 </body>
 </html>`;
-  }, [colors, typography, cssCode]);
+  }, [colors, typography, cssCode, logoText]);
 
   // Generate Tailwind config
   const tailwindConfig = useMemo(() => {

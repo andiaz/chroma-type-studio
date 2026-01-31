@@ -412,6 +412,7 @@ export function useDesignSystem() {
   const [darkColors, setDarkColors] = useState<ColorEntry[] | null>(null);
   const [autoSyncDark, setAutoSyncDark] = useState(true);
   const [visionSimulation, setVisionSimulation] = useState<VisionType>("normal");
+  const [logoText, setLogoText] = useState("Brand");
   const isInitialized = useRef(false);
 
   // Generate color harmony based on config
@@ -478,6 +479,7 @@ export function useDesignSystem() {
       if (urlState.colorScalesConfig) setColorScalesConfig(urlState.colorScalesConfig);
       if (urlState.colorScalesEnabled !== undefined) setColorScalesEnabled(urlState.colorScalesEnabled);
       if (urlState.fullSystemEnabled !== undefined) setFullSystemEnabled(urlState.fullSystemEnabled);
+      if (urlState.logoText) setLogoText(urlState.logoText);
       setLoadedFromUrl(true);
       // Clear the hash after loading so it doesn't persist in the URL
       clearUrlHash();
@@ -499,6 +501,7 @@ export function useDesignSystem() {
         if (parsed.colorScalesConfig) setColorScalesConfig(parsed.colorScalesConfig);
         if (parsed.colorScalesEnabled !== undefined) setColorScalesEnabled(parsed.colorScalesEnabled);
         if (parsed.fullSystemEnabled !== undefined) setFullSystemEnabled(parsed.fullSystemEnabled);
+        if (parsed.logoText) setLogoText(parsed.logoText);
       } catch (e) {
         console.error("Failed to parse saved design system:", e);
       }
@@ -513,8 +516,9 @@ export function useDesignSystem() {
       colorScalesConfig,
       colorScalesEnabled,
       fullSystemEnabled,
+      logoText,
     }));
-  }, [colors, typography, colorScalesConfig, colorScalesEnabled, fullSystemEnabled]);
+  }, [colors, typography, colorScalesConfig, colorScalesEnabled, fullSystemEnabled, logoText]);
 
   // Color operations
   const updateColor = useCallback((id: string, updates: Partial<Omit<ColorEntry, "id">>) => {
@@ -637,6 +641,7 @@ export function useDesignSystem() {
     setColorScalesConfig(DEFAULT_SCALES_CONFIG);
     setColorScalesEnabled(false);
     setFullSystemEnabled(false);
+    setLogoText("Brand");
     localStorage.removeItem("chromaType-designSystem");
   }, []);
 
@@ -648,9 +653,10 @@ export function useDesignSystem() {
       colorScalesConfig,
       colorScalesEnabled,
       fullSystemEnabled,
+      logoText,
     };
     return generateShareUrl(state);
-  }, [colors, typography, colorScalesConfig, colorScalesEnabled, fullSystemEnabled]);
+  }, [colors, typography, colorScalesConfig, colorScalesEnabled, fullSystemEnabled, logoText]);
 
   // Dark mode operations
   const toggleColorMode = useCallback(() => {
@@ -702,6 +708,9 @@ export function useDesignSystem() {
     // Vision simulation
     visionSimulation,
     setVisionSimulation,
+    // Logo text
+    logoText,
+    setLogoText,
     // Typography and color scales
     typography,
     colorScales,

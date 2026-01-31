@@ -11,6 +11,7 @@ export interface ShareableState {
   colorScalesConfig: ColorHarmonyConfig;
   colorScalesEnabled: boolean;
   fullSystemEnabled: boolean;
+  logoText?: string;
 }
 
 /**
