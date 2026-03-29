@@ -10,7 +10,7 @@ import {
   ExtractedColor,
 } from "@/lib/colorExtraction";
 import type { ColorEntry, ColorRole } from "@/hooks/useDesignSystem";
-import { cn } from "@/lib/utils";
+import { cn, isValidHttpUrl } from "@/lib/utils";
 
 interface ImageExtractorProps {
   colors: ColorEntry[];
@@ -39,6 +39,11 @@ export function ImageExtractor({ colors, onApply }: ImageExtractorProps) {
 
   const processImageUrl = useCallback(async (url: string) => {
     if (!url.trim()) return;
+
+    if (!isValidHttpUrl(url)) {
+      setError("Only HTTP and HTTPS URLs are supported.");
+      return;
+    }
 
     setIsProcessing(true);
     setError(null);

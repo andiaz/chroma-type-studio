@@ -19,6 +19,7 @@ import {
   simulateColorBlindness,
   type VisionType,
 } from "@/lib/colorBlindness";
+import { isValidHex, isValidColorRole } from "@/lib/utils";
 
 // Color roles for semantic organization
 export type ColorRole = 
@@ -491,17 +492,49 @@ export function useDesignSystem() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.colors) setColors(parsed.colors);
-        if (parsed.typography) {
+
+        // Validate colors before applying
+        if (parsed.colors && Array.isArray(parsed.colors) && parsed.colors.length <= 50) {
+          const validColors = parsed.colors.every((c: unknown) => {
+            if (!c || typeof c !== "object") return false;
+            const entry = c as Record<string, unknown>;
+            return (
+              typeof entry.id === "string" &&
+              typeof entry.role === "string" &&
+              isValidColorRole(entry.role) &&
+              typeof entry.name === "string" &&
+              (entry.name as string).length <= 50 &&
+              typeof entry.hex === "string" &&
+              isValidHex(entry.hex as string)
+            );
+          });
+          if (validColors) setColors(parsed.colors);
+        }
+
+        // Validate typography before applying
+        if (
+          parsed.typography &&
+          typeof parsed.typography.baseSize === "number" &&
+          parsed.typography.baseSize >= 4 && parsed.typography.baseSize <= 100 &&
+          typeof parsed.typography.scaleRatio === "number" &&
+          parsed.typography.scaleRatio >= 1 && parsed.typography.scaleRatio <= 3 &&
+          typeof parsed.typography.headingFont === "string" &&
+          parsed.typography.headingFont.length <= 100 &&
+          typeof parsed.typography.bodyFont === "string" &&
+          parsed.typography.bodyFont.length <= 100
+        ) {
           setTypography({
             ...parsed.typography,
             steps: generateTypographySteps(parsed.typography.baseSize, parsed.typography.scaleRatio),
           });
         }
+
         if (parsed.colorScalesConfig) setColorScalesConfig(parsed.colorScalesConfig);
         if (parsed.colorScalesEnabled !== undefined) setColorScalesEnabled(parsed.colorScalesEnabled);
         if (parsed.fullSystemEnabled !== undefined) setFullSystemEnabled(parsed.fullSystemEnabled);
-        if (parsed.logoText) setLogoText(parsed.logoText);
+        if (parsed.logoText && typeof parsed.logoText === "string" && parsed.logoText.length <= 100) {
+          setLogoText(parsed.logoText);
+        }
       } catch (e) {
         console.error("Failed to parse saved design system:", e);
       }

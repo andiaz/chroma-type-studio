@@ -17,7 +17,7 @@ import {
   Link2
 } from "lucide-react";
 import { DesignSystem } from "@/hooks/useDesignSystem";
-import { cn } from "@/lib/utils";
+import { cn, escapeHtml, sanitizeHex } from "@/lib/utils";
 
 interface ExportPanelProps {
   designSystem: DesignSystem;
@@ -294,7 +294,8 @@ ${spacingVars}${colorScaleVars}${fullSystemVars}`;
 
   // Generate complete HTML demo page
   const htmlCode = useMemo(() => {
-    const googleFontsUrl = `https://fonts.googleapis.com/css2?family=${typography.headingFont.replace(/ /g, "+")}:wght@400;500;600;700&family=${typography.bodyFont.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`;
+    const safeLogoText = escapeHtml(logoText);
+    const googleFontsUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(typography.headingFont)}:wght@400;500;600;700&family=${encodeURIComponent(typography.bodyFont)}:wght@400;500;600;700&display=swap`;
 
     const getSize = (name: string) => {
       const step = typography.steps.find(s => s.name === name);
@@ -306,13 +307,13 @@ ${spacingVars}${colorScaleVars}${fullSystemVars}`;
       return step ? step.lineHeight : 1.5;
     };
 
-    const bg = colors.find(c => c.role === "background")?.hex || "#FAFAF9";
-    const surface = colors.find(c => c.role === "surface")?.hex || "#FFFFFF";
-    const text = colors.find(c => c.role === "text")?.hex || "#1A1A2E";
-    const textMuted = colors.find(c => c.role === "textMuted")?.hex || "#6B7280";
-    const primary = colors.find(c => c.role === "primary")?.hex || "#5B4CDB";
-    const secondary = colors.find(c => c.role === "secondary")?.hex || "#F97316";
-    const accent = colors.find(c => c.role === "accent")?.hex || "#14B8A6";
+    const bg = sanitizeHex(colors.find(c => c.role === "background")?.hex || "#FAFAF9");
+    const surface = sanitizeHex(colors.find(c => c.role === "surface")?.hex || "#FFFFFF");
+    const text = sanitizeHex(colors.find(c => c.role === "text")?.hex || "#1A1A2E");
+    const textMuted = sanitizeHex(colors.find(c => c.role === "textMuted")?.hex || "#6B7280");
+    const primary = sanitizeHex(colors.find(c => c.role === "primary")?.hex || "#5B4CDB");
+    const secondary = sanitizeHex(colors.find(c => c.role === "secondary")?.hex || "#F97316");
+    const accent = sanitizeHex(colors.find(c => c.role === "accent")?.hex || "#14B8A6");
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -624,7 +625,7 @@ ${cssCode}
   <!-- Header -->
   <header class="header">
     <div class="header-inner">
-      <div class="logo">${logoText}</div>
+      <div class="logo">${safeLogoText}</div>
       <nav class="nav">
         <a href="#">Features</a>
         <a href="#">Pricing</a>
@@ -695,7 +696,7 @@ ${cssCode}
   <!-- Footer -->
   <footer class="footer">
     <div class="footer-inner">
-      <p>© ${new Date().getFullYear()} ${logoText}. All rights reserved.</p>
+      <p>© ${new Date().getFullYear()} ${safeLogoText}. All rights reserved.</p>
       <div class="footer-links">
         <a href="#">Privacy</a>
         <a href="#">Terms</a>

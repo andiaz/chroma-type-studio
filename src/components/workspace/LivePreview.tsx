@@ -1,7 +1,7 @@
 import { useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { DesignSystem } from "@/hooks/useDesignSystem";
+import { DesignSystem, GOOGLE_FONTS } from "@/hooks/useDesignSystem";
 import { ArrowRight, Star, Check } from "lucide-react";
 
 interface LivePreviewProps {
@@ -42,12 +42,19 @@ export function LivePreview({ designSystem }: LivePreviewProps) {
     const uniqueFonts = [...new Set(fonts)];
 
     uniqueFonts.forEach(font => {
+      // Only load fonts from the known allowlist
+      if (!GOOGLE_FONTS.includes(font)) return;
+
+      const href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;500;600;700&display=swap`;
       const link = document.createElement("link");
-      link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`;
+      link.href = href;
       link.rel = "stylesheet";
 
-      // Check if already loaded
-      if (!document.querySelector(`link[href="${link.href}"]`)) {
+      // Check if already loaded using a safe attribute selector
+      const existing = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).some(
+        el => (el as HTMLLinkElement).href === link.href
+      );
+      if (!existing) {
         document.head.appendChild(link);
       }
     });
